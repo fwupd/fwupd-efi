@@ -12,25 +12,6 @@ if [ ! -f "$SETTINGS_FILE" ]; then
     cp "$SETTINGS_TEMPLATE_FILE" "$SETTINGS_FILE"
 fi
 
-#if interactive install build deps
-if [ -n "$PS1" ] || [[ $- == *i* ]] || [ -f /dev/.cros_milestone ]; then
-    read -p  "Install build dependencies? (y/n) " question
-    if [ "$question" = "y" ]; then
-        DEPS=$(./contrib/ci/generate_dependencies.py)
-        OS=$(python3 -c "import distro; print(distro.linux_distribution()[0].split()[0].lower())")
-        if [ "$OS" = "debian" ] || [ "$OS" = "ubuntu" ]; then
-            if ! python3 -c "import venv"; then
-                DEPS="python3-venv"
-            fi
-            sudo apt install $DEPS
-        elif [ "$OS" = "fedora" ]; then
-            sudo dnf install $DEPS
-        elif [ "$OS" = "arch" ]; then
-            pacman -Syu --noconfirm --needed $DEPS
-        fi
-    fi
-fi
-
 python3 -m venv venv
 source venv/bin/activate
 
