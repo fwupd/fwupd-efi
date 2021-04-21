@@ -115,4 +115,14 @@ if get_option('efi_sbat_distro_id') == ''
     warning('-Defi_sbat_distro_id is unset, see README.md')
 endif
 
+pkgg = import('pkgconfig')
+pkgg.generate(
+  version : meson.project_version(),
+  name : meson.project_name(),
+  filebase : 'fwupd-efi',
+  description : 'fwupd-efi is the UEFI binary used with fwupd for installing UEFI firmware updates',
+)
+
+fwupd_efi_dep = declare_dependency()
+
 subdir('efi')
