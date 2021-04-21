@@ -1,26 +1,16 @@
-fwupd Release Notes
+fwupd-efi Release Notes
 
 Write release entries:
 
-git log --format="%s" --cherry-pick --right-only 1.5.7... | grep -i -v trivial | grep -v Merge | sort | uniq
-Add any user visible changes into ../data/org.freedesktop.fwupd.metainfo.xml
-appstream-util appdata-to-news ../data/org.freedesktop.fwupd.metainfo.xml > NEWS
-
-Update translations:
-
-ninja-build fwupd-pot
-tx push --source
-tx pull --all --force --minimum-perc=5
-ninja-build fix-translations
-git add ../po/*.po
+git log --format="%s" --cherry-pick --right-only 1.0... | grep -i -v trivial | grep -v Merge | sort | uniq
 
 2. Commit changes to git:
 
 # MAKE SURE THIS IS CORRECT
-export release_ver="1.6.0"
+export release_ver="1.1"
 
-git commit -a -m "Release fwupd ${release_ver}"
-git tag -s -f -m "Release fwupd ${release_ver}" "${release_ver}"
+git commit -a -m "Release fwupd-efi ${release_ver}"
+git tag -s -f -m "Release fwupd-efi ${release_ver}" "${release_ver}"
 <wait>
 git push --tags
 git push
@@ -31,11 +21,11 @@ ninja dist
 
 3a. Generate the additional verification metadata
 
-gpg -b -a meson-dist/fwupd-${release_ver}.tar.xz
+gpg -b -a meson-dist/fwupd-efi-${release_ver}.tar.xz
 
 4. Upload tarball:
 
-scp meson-dist/fwupd-${release_ver}.tar.* hughsient@people.freedesktop.org:~/public_html/releases
+scp meson-dist/fwupd-efi-${release_ver}.tar.* hughsient@people.freedesktop.org:~/public_html/releases
 
 5. Do post release version bump in meson.build
 
