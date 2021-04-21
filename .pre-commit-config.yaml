@@ -3,7 +3,7 @@ repos:
     rev: v3.4.0
     hooks:
     -   id: no-commit-to-branch
-        args: [--branch, master, --pattern, 1_.*_X]
+        args: [--branch, main]
     -   id: check-added-large-files
     -   id: check-byte-order-marker
     -   id: check-executables-have-shebangs
@@ -26,14 +26,6 @@ repos:
     - id: black
 -   repo: local
     hooks:
-    - id: check-deprecated
-      name: check for use of any deprecated items
-      language: script
-      entry: ./contrib/ci/check-deprecated.sh
-    - id: check-null-false-returns
-      name: check for null / false return mistmatch
-      language: script
-      entry: ./contrib/ci/check-null-false-returns.py
     - id: shellcheck
       name: check shellscript style
       language: system
