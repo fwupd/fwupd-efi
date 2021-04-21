@@ -208,7 +208,7 @@ so = custom_target('fwup.so',
                    depends: fwupd_so_deps)
 
 # sanity check the packager set this to *SOMETHING*
-if get_option('efi_sbat_distro_id') == '' and get_option('supported_build')
+if get_option('efi_sbat_distro_id') == ''
     warning('-Defi_sbat_distro_id is unset, see plugins/uefi-capsule/README.md')
 endif
 
