@@ -61,6 +61,7 @@ rm -vf %{fwup_efi_fn}.tmp
 %license COPYING
 %{_libexecdir}/fwupd/efi/*.efi
 %{_libexecdir}/fwupd/efi/*.efi.signed
+%{_libdir}/pkgconfig/fwupd-efi.pc
 
 %changelog
 * #LONGDATE# Richard Hughes <richard@hughsie.com> #VERSION#-0.#BUILD##ALPHATAG#
