@@ -207,11 +207,6 @@ so = custom_target('fwup.so',
                              ['-lefi', '-lgnuefi', libgcc_file_name],
                    depends: fwupd_so_deps)
 
-# sanity check the packager set this to *SOMETHING*
-if get_option('efi_sbat_distro_id') == ''
-    warning('-Defi_sbat_distro_id is unset, see plugins/uefi-capsule/README.md')
-endif
-
 app = custom_target(efi_name,
                     input : so,
                     output : efi_name,

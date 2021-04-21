@@ -110,4 +110,9 @@ else
         gnu_efi_arch = ''
 endif
 
+# sanity check the packager set this to *SOMETHING*
+if get_option('efi_sbat_distro_id') == ''
+    warning('-Defi_sbat_distro_id is unset, see README.md')
+endif
+
 subdir('efi')
