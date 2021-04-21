@@ -1,3 +1,10 @@
 build/
 venv/
 .vscode
+fwupd*.build
+*.gz
+*.changes
+*.deb
+*.xz
+*.dsc
+*.buildinfo
