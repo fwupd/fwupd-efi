@@ -9,7 +9,7 @@ appstream-util appdata-to-news ../contrib/org.freedesktop.fwupd.efi.metainfo.xml
 2. Commit changes to git:
 
 # MAKE SURE THIS IS CORRECT
-export release_ver="1.0"
+export release_ver="1.1"
 
 git commit -a -m "Release fwupd-efi ${release_ver}"
 git tag -s -f -m "Release fwupd-efi ${release_ver}" "${release_ver}"
