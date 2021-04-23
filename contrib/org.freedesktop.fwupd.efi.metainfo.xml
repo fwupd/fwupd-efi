@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Copyright 2021 Richard Hughes <richard@hughsie.com> -->
+<component type="generic">
+  <id>org.freedesktop.fwupd.efi</id>
+  <extends>org.freedesktop.fwupd</extends>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>LGPL-2.0+</project_license>
+  <name>fwupd-efi</name>
+  <summary>EFI helpers to install system firmware</summary>
+  <description>
+    <p>
+      This project builds a UEFI binary for installing updates using the
+      UpdateCapsule runtime service.
+    </p>
+    <p>
+      The source was imported from the combined fwupd project, and is now
+      maintained separately to allow fwupd userspace releases and fwupd-efi
+      UEFI executable releases to follow a different candence.
+    </p>
+  </description>
+  <url type="bugtracker">https://github.com/fwupd/fwupd-efi/issues</url>
+  <url type="homepage">https://fwupd.org/</url>
+  <update_contact>richard_at_hughsie.com</update_contact>
+  <content_rating type="oars-1.0"/>
+  <releases>
+    <release version="1.0" date="2021-04-23">
+      <description>
+        <p>This is the first release split from the fwupd parent project.</p>
+      </description>
+    </release>
+  </releases>
+</component>
