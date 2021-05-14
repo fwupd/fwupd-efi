@@ -215,6 +215,7 @@ app = custom_target(efi_name,
                       '@INPUT@', '@OUTPUT@',
                       '--arch', gnu_efi_arch,
                       '--objcopy', efi_objcopy,
+                      '--genpeimg', genpeimg.found() ? genpeimg : ''
                     ],
                     install : true,
                     install_dir : efi_app_location)
