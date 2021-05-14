@@ -31,13 +31,19 @@ if not have_gnu_efi
   error('gnu-efi support requested, but headers were not found')
 endif
 
+# The name we need to look for on this arch and OS: elf_x86_64_fbsd_efi.lds
+lds_os = ''
+if host_cpu == 'x86_64' and host_machine.system() == 'freebsd'
+  lds_os = '_fbsd'
+endif
+
 arch_lds = 'efi.lds'
 arch_crt = 'crt0.o'
 if efi_ldsdir == ''
   efi_ldsdir = join_paths(efi_libdir, 'gnuefi', gnu_efi_path_arch)
   cmd = run_command('test', '-f', join_paths(efi_ldsdir, arch_lds))
   if cmd.returncode() != 0
-    arch_lds = 'elf_@0@_efi.lds'.format(gnu_efi_path_arch)
+    arch_lds = 'elf_@0@@1@_efi.lds'.format(gnu_efi_path_arch, lds_os)
     arch_crt = 'crt0-efi-@0@.o'.format(gnu_efi_path_arch)
     efi_ldsdir = join_paths(efi_libdir, 'gnuefi')
     cmd = run_command('test', '-f', join_paths(efi_ldsdir, arch_lds))
@@ -52,7 +58,7 @@ if efi_ldsdir == ''
 else
   cmd = run_command('test', '-f', join_paths(efi_ldsdir, arch_lds))
   if cmd.returncode() != 0
-    arch_lds = 'elf_@0@_efi.lds'.format(gnu_efi_path_arch)
+    arch_lds = 'elf_@0@@1@_efi.lds'.format(gnu_efi_path_arch, lds_os)
     arch_crt = 'crt0-efi-@0@.o'.format(gnu_efi_path_arch)
     cmd = run_command('test', '-f', join_paths(efi_ldsdir, arch_lds))
   endif
