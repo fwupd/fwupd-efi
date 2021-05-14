@@ -29,8 +29,7 @@ elif host_cpu == 'aarch64'
         EFI_MACHINE_TYPE_NAME = 'aa64'
         gnu_efi_arch = 'aarch64'
 else
-        EFI_MACHINE_TYPE_NAME = ''
-        gnu_efi_arch = ''
+        error('Unknown host_cpu ' + host_cpu)
 endif
 
 # sanity check the packager set this to *SOMETHING*
