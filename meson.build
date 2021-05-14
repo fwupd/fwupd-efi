@@ -11,7 +11,6 @@ prefix = get_option('prefix')
 libdir = join_paths(prefix, get_option('libdir'))
 libexecdir = join_paths(prefix, get_option('libexecdir'))
 
-objcopy = find_program ('objcopy')
 genpeimg = find_program ('genpeimg', required: false)
 
 efi_app_location = join_paths(libexecdir, 'fwupd', 'efi')
