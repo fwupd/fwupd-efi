@@ -38,8 +38,13 @@ def _run_objcopy(args):
     # Use 'binary' instead, and add required symbols manually
     if args.arch in ["aarch64", "arm"]:
         argv.extend(["-O", "binary"])
+    elif args.os == "freebsd":
+        # `--target` option is missing and --input-target doesn't recognize
+        # "efi-app-*"
+        argv.extend(["--output-target", "efi-app-{}".format(args.arch)])
     else:
         argv.extend(["--target", "efi-app-{}".format(args.arch)])
+
     try:
         subprocess.run(argv, check=True)
     except FileNotFoundError as e:
@@ -64,6 +69,7 @@ if __name__ == "__main__":
         "--objcopy", default="objcopy", help="Binary file to use for objcopy"
     )
     parser.add_argument("--arch", default="x86_64", help="EFI architecture")
+    parser.add_argument("--os", help="OS type")
     parser.add_argument("infile", help="Input file")
     parser.add_argument("outfile", help="Output file")
     _args = parser.parse_args()
