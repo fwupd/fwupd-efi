@@ -48,13 +48,15 @@ def _run_objcopy(args):
 
 
 def _run_genpeimg(args):
+    if not args.genpeimg:
+        return
 
-    # this is okay if it does not exist
-    argv = ["genpeimg", "-d", "+d", "+n", "-d", "+s", args.outfile]
+    argv = [args.genpeimg, "-d", "+d", "+n", "-d", "+s", args.outfile]
     try:
         subprocess.run(argv, check=True)
     except FileNotFoundError as _:
-        pass
+        print(str(e))
+        sys.exit(1)
 
 
 if __name__ == "__main__":
@@ -63,6 +65,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--objcopy", default="objcopy", help="Binary file to use for objcopy"
     )
+    parser.add_argument("--genpeimg", help="Binary file to use for genpeimg")
     parser.add_argument("--arch", default="x86_64", help="EFI architecture")
     parser.add_argument("infile", help="Input file")
     parser.add_argument("outfile", help="Output file")
