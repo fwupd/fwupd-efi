@@ -2,7 +2,7 @@
 
 This repository contains the source used for the fwupd project to generate a UEFI binary for installing updates using the `UpdateCapsule` runtime service.
 
-It was originally imported from the combined fwupd project, and is now maintained separately to allow fwupd userspace releases and fwupd-efi UEFI executable releases to follow a different candence.
+It was originally imported from the combined fwupd project, and is now maintained separately to allow fwupd userspace releases and fwupd-efi UEFI executable releases to follow a different cadence.
 
 ## Compatibility
 
@@ -31,7 +31,7 @@ ninja -C build install
 ## UEFI SBAT Support
 
 The packager should also specify the SBAT metadata required for the secure boot
-revocation support. See the [specification](https://github.com/rhboot/shim/blob/sbat/SBAT.md) for more information.
+revocation support. See the [specification](https://github.com/rhboot/shim/blob/main/SBAT.md) for more information.
 
 Typically, this will be set as part of the packager build script, e.g.
 
