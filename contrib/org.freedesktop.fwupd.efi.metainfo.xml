@@ -28,5 +28,15 @@
         <p>This is the first release split from the fwupd parent project.</p>
       </description>
     </release>
+    <release version="1.1" date="2021-06-19">
+      <description>
+        <p>This release fixes the following bugs:</p>
+        <ul>
+          <li>Abort if the host architecture isn't known</li>
+          <li>Account for objdump missing --target option on FreeBSD</li>
+          <li>Pass the found genpeimg to generate_binary</li>
+        </ul>
+      </description>
+    </release>
   </releases>
 </component>

@@ -11,7 +11,7 @@ appstream-util appdata-to-news ../contrib/org.freedesktop.fwupd.efi.metainfo.xml
 # MAKE SURE THIS IS CORRECT
 export release_ver="1.1"
 
-git commit -a -m "Release fwupd-efi ${release_ver}"
+git commit -a -m "Release fwupd-efi ${release_ver}" --no-verify
 git tag -s -f -m "Release fwupd-efi ${release_ver}" "${release_ver}"
 <wait>
 git push --tags
@@ -33,5 +33,5 @@ scp meson-dist/fwupd-efi-${release_ver}.tar.* hughsient@people.freedesktop.org:~
 
 6. Commit changes:
 
-git commit -a -m "trivial: post release version bump"
+git commit -a -m "trivial: post release version bump" --no-verify
 git push
