@@ -561,7 +561,8 @@ efi_main(EFI_HANDLE image, EFI_SYSTEM_TABLE *systab)
 		return rc;
 	}
 	if (n_updates == 0) {
-		fwup_warning(L"No updates to process.  Called in error?");
+		fwup_warning(L"No updates to process, exiting in 10 seconds.");
+		fwup_msleep(10 * SECONDS);
 		return EFI_INVALID_PARAMETER;
 	}
 
