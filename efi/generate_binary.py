@@ -59,7 +59,7 @@ def _run_genpeimg(args):
     argv = [args.genpeimg, "-d", "+d", "+n", "-d", "+s", args.outfile]
     try:
         subprocess.run(argv, check=True)
-    except FileNotFoundError as _:
+    except FileNotFoundError as e:
         print(str(e))
         sys.exit(1)
 

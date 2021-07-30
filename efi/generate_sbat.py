@@ -14,7 +14,7 @@ import tempfile
 
 
 def _generate_sbat(args):
-    """ append SBAT metadata """
+    """append SBAT metadata"""
     FWUPD_SUMMARY = "Firmware update daemon"
     FWUPD_URL = "https://github.com/fwupd/fwupd"
 
