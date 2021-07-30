@@ -605,10 +605,8 @@ efi_main(EFI_HANDLE image, EFI_SYSTEM_TABLE *systab)
 
 	/* step 4: apply the capsules */
 	rc = fwup_apply_capsules(capsules, cbd_data, n_updates, &reset_type);
-	if (EFI_ERROR(rc)) {
+	if (EFI_ERROR(rc))
 		fwup_warning(L"Could not apply capsules: %r", rc);
-		return rc;
-	}
 
 	/* step 5: if #4 didn't reboot us, do it manually */
 	fwup_info(L"Reset System");
@@ -617,5 +615,5 @@ efi_main(EFI_HANDLE image, EFI_SYSTEM_TABLE *systab)
 		fwup_msleep(30 * SECONDS);
 	uefi_call_wrapper(RT->ResetSystem, 4, reset_type, EFI_SUCCESS, 0, NULL);
 
-	return EFI_SUCCESS;
+	return rc;
 }
