@@ -18,7 +18,7 @@ jobs:
         run: |
           ./contrib/setup
           source venv/bin/activate
-          sed -i "/no-commit-to-branch/d; /args: [--branch, main]/d" .pre-commit-config.yaml
+          sed -i "/no-commit-to-branch/,+1d" .pre-commit-config.yaml
           pre-commit run --all-files
 
   build:
