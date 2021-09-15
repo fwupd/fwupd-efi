@@ -88,6 +88,7 @@ if host_cpu == 'aarch64' or host_cpu == 'arm'
       # The gnuefi libraries are still needed
       efi_libdir = efi_crtdir
       efi_crtdir = join_paths(meson.current_build_dir(), 'crt0')
+      efi_ldsdir = join_paths(meson.current_source_dir(), 'lds')
     endif
   endif
 endif
