@@ -16,7 +16,7 @@ import tempfile
 def _generate_sbat(args):
     """append SBAT metadata"""
     FWUPD_SUMMARY = "Firmware update daemon"
-    FWUPD_URL = "https://github.com/fwupd/fwupd"
+    FWUPD_URL = "https://github.com/fwupd/fwupd-efi"
 
     subprocess.run(
         [args.cc, "-x", "c", "-c", "-o", args.outfile, "/dev/null"], check=True
