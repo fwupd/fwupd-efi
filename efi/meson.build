@@ -1,6 +1,25 @@
 generate_sbat = find_program('generate_sbat.py', native: true)
 generate_binary = find_program('generate_binary.py', native: true)
 
+# get source version, falling back
+git = find_program('git', required : false)
+if git.found()
+  source_version = run_command(git, 'describe', check: false).stdout().strip()
+else
+  source_version = 'unknown'
+endif
+
+if uswid.found()
+  con2 = configuration_data()
+  con2.set('project_version', meson.project_version())
+  con2.set('source_version', source_version)
+  swid_xml = configure_file(
+    input : 'swid.xml.in',
+    output : 'swid.xml',
+    configuration : con2,
+  )
+endif
+
 efi_ldsdir = get_option('efi-ldsdir')
 efi_incdir = get_option('efi-includedir')
 
@@ -175,28 +194,29 @@ endif
 libgcc_file_name = run_command(cc.cmd_array(), '-print-libgcc-file-name').stdout().strip()
 efi_name = 'fwupd@0@.efi'.format(EFI_MACHINE_TYPE_NAME)
 
-o_file1 = custom_target('fwupdate.o',
+o_files = []
+o_files += custom_target('fwupdate.o',
                         input : 'fwupdate.c',
                         output : 'fwupdate.o',
                         command : [cc.cmd_array(), '-c', '@INPUT@', '-o', '@OUTPUT@']
                                   + compile_args)
-o_file2 = custom_target('fwup-debug.o',
+o_files += custom_target('fwup-debug.o',
                         input : 'fwup-debug.c',
                         output : 'fwup-debug.o',
                         command : [cc.cmd_array(), '-c', '@INPUT@', '-o', '@OUTPUT@']
                                   + compile_args)
-o_file3 = custom_target('fwup-efi.o',
+o_files += custom_target('fwup-efi.o',
                         input : 'fwup-efi.c',
                         output : 'fwup-efi.o',
                         command : [cc.cmd_array(), '-c', '@INPUT@', '-o', '@OUTPUT@']
                                   + compile_args)
-o_file4 = custom_target('fwup-common.o',
+o_files += custom_target('fwup-common.o',
                         input : 'fwup-common.c',
                         output : 'fwup-common.o',
                         command : [cc.cmd_array(), '-c', '@INPUT@', '-o', '@OUTPUT@']
                                   + compile_args)
 
-o_file5 = custom_target('fwup-sbat.o',
+o_files += custom_target('fwup-sbat.o',
                         output : 'fwup-sbat.o',
                         command : [
                           generate_sbat,
@@ -216,6 +236,18 @@ o_file5 = custom_target('fwup-sbat.o',
                           '--sbat-distro-url', get_option('efi_sbat_distro_url'),
                         ])
 
+if uswid.found()
+  o_files += custom_target('fwup-sbom.o',
+                          output : 'fwup-sbom.o',
+                          command : [
+                            'uswid',
+                            '--cc', cc.cmd_array()[-1],
+                            '--objcopy', objcopy,
+                            '--load', swid_xml,
+                            '--save', '@OUTPUT@',
+                          ])
+endif
+
 fwupd_so_deps = []
 if efi_crtdir == join_paths(meson.current_build_dir(), 'crt0')
   # A custom crt0 is needed
@@ -224,7 +256,7 @@ if efi_crtdir == join_paths(meson.current_build_dir(), 'crt0')
 endif
 
 so = custom_target('fwup.so',
-                   input : [o_file1, o_file2, o_file3, o_file4, o_file5],
+                   input : o_files,
                    output : 'fwup.so',
                    command : [ld, '-o', '@OUTPUT@'] +
                              efi_ldflags + ['@INPUT@'] +
