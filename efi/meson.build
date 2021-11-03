@@ -1,3 +1,6 @@
+generate_sbat = find_program('generate_sbat.py', native: true)
+generate_binary = find_program('generate_binary.py', native: true)
+
 efi_cc = get_option('efi-cc')
 efi_ld = get_option('efi-ld')
 efi_objcopy = get_option('efi-objcopy')
@@ -183,7 +186,7 @@ o_file4 = custom_target('fwup-common.o',
 o_file5 = custom_target('fwup-sbat.o',
                         output : 'fwup-sbat.o',
                         command : [
-                          join_paths(meson.current_source_dir(), 'generate_sbat.py'),
+                          generate_sbat,
                           '@OUTPUT@',
                           '--cc', efi_cc,
                           '--objcopy', efi_objcopy,
@@ -218,7 +221,7 @@ app = custom_target(efi_name,
                     input : so,
                     output : efi_name,
                     command : [
-                      join_paths(meson.current_source_dir(), 'generate_binary.py'),
+                      generate_binary,
                       '@INPUT@', '@OUTPUT@',
                       '--arch', gnu_efi_arch,
                       '--os', host_machine.system(),
