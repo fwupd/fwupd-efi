@@ -6,6 +6,7 @@ project('fwupd-efi', 'c',
 )
 
 cc = meson.get_compiler('c')
+objcopy = find_program('objcopy')
 
 prefix = get_option('prefix')
 libdir = join_paths(prefix, get_option('libdir'))

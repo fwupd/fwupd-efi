@@ -3,7 +3,6 @@ generate_binary = find_program('generate_binary.py', native: true)
 
 efi_cc = get_option('efi-cc')
 efi_ld = get_option('efi-ld')
-efi_objcopy = get_option('efi-objcopy')
 efi_ldsdir = get_option('efi-ldsdir')
 efi_incdir = get_option('efi-includedir')
 
@@ -189,7 +188,7 @@ o_file5 = custom_target('fwup-sbat.o',
                           generate_sbat,
                           '@OUTPUT@',
                           '--cc', efi_cc,
-                          '--objcopy', efi_objcopy,
+                          '--objcopy', objcopy,
                           '--project-name', meson.project_name(),
                           '--project-version', meson.project_version(),
                           '--sbat-version', '1',
@@ -225,7 +224,7 @@ app = custom_target(efi_name,
                       '@INPUT@', '@OUTPUT@',
                       '--arch', gnu_efi_arch,
                       '--os', host_machine.system(),
-                      '--objcopy', efi_objcopy,
+                      '--objcopy', objcopy,
                       '--genpeimg', genpeimg.found() ? genpeimg : ''
                     ],
                     install : true,
@@ -234,7 +233,7 @@ app = custom_target(efi_name,
 dbg = custom_target('efi_debug',
                     input : so,
                     output : efi_name + '.debug',
-                    command : [efi_objcopy,
+                    command : [objcopy,
                                '-j', '.text',
                                '-j', '.sdata',
                                '-j', '.data',
