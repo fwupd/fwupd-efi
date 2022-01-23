@@ -23,9 +23,14 @@
   <update_contact>richard_at_hughsie.com</update_contact>
   <content_rating type="oars-1.0"/>
   <releases>
-    <release version="1.0" date="2021-04-23">
+    <release version="1.2" date="2022-01-23">
       <description>
-        <p>This is the first release split from the fwupd parent project.</p>
+        <p>This release fixes the following bugs:</p>
+        <ul>
+          <li>Sleep longer when no updates to process or event of error</li>
+          <li>Use the correct ldscript when the local crt0 is used for SBAT</li>
+          <li>Use the standard objcopy binary</li>
+        </ul>
       </description>
     </release>
     <release version="1.1" date="2021-06-19">
@@ -36,6 +41,11 @@
           <li>Account for objdump missing --target option on FreeBSD</li>
           <li>Pass the found genpeimg to generate_binary</li>
         </ul>
+      </description>
+    </release>
+    <release version="1.0" date="2021-04-23">
+      <description>
+        <p>This is the first release split from the fwupd parent project.</p>
       </description>
     </release>
   </releases>
