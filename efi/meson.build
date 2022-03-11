@@ -84,9 +84,9 @@ endif
 if host_cpu == 'aarch64' or host_cpu == 'arm'
   if get_option('efi_sbat_distro_id') != ''
     arch_crt_source = 'crt0-efi-@0@.S'.format(gnu_efi_path_arch)
-    cmd = run_command('grep', '-q', 'sbat', join_paths(efi_crtdir, arch_crt_source))
+    cmd = run_command('grep', '-q', 'sbat', join_paths(efi_crtdir, arch_crt))
     if cmd.returncode() != 0
-      warning('Cannot find SBAT section in @0@, using local copy'.format(join_paths(efi_crtdir, arch_crt_source)))
+      warning('Cannot find SBAT section in @0@, using local copy'.format(join_paths(efi_crtdir, arch_crt)))
       # The gnuefi libraries are still needed
       efi_libdir = efi_crtdir
       efi_crtdir = join_paths(meson.current_build_dir(), 'crt0')
