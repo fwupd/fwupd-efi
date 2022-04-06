@@ -1,6 +1,6 @@
 repos:
 -   repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v3.4.0
+    rev: v4.1.0
     hooks:
     -   id: no-commit-to-branch
         args: [--branch, main]
@@ -26,7 +26,7 @@ repos:
     -   id: codespell
         args: ['--config', './contrib/codespell.cfg', --write-changes]
 -   repo: https://github.com/ambv/black
-    rev: 21.6b0
+    rev: 22.3.0
     hooks:
     - id: black
 -   repo: local
@@ -42,7 +42,7 @@ repos:
       entry: ./contrib/reformat-code.py
       types: [c]
 -   repo: https://github.com/igorshubovych/markdownlint-cli
-    rev: v0.27.1
+    rev: v0.31.1
     hooks:
     - id: markdownlint
       args: ['--fix', '--ignore', '.github']
