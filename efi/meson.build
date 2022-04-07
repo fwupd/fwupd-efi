@@ -121,6 +121,7 @@ compile_args = ['-Og',
                 '-Wno-address-of-packed-member',
                 '-grecord-gcc-switches',
                 '-DDEBUGDIR="@0@"'.format(debugdir),
+                '-I.',
                 '-isystem', efi_incdir,
                 '-isystem', join_paths(efi_incdir, gnu_efi_path_arch)]
 if get_option('werror')
