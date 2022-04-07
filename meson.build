@@ -5,6 +5,9 @@ project('fwupd-efi', 'c',
   default_options : ['warning_level=2', 'c_std=c99'],
 )
 
+conf = configuration_data()
+conf.set_quoted('PACKAGE_VERSION', meson.project_version())
+
 cc = meson.get_compiler('c')
 objcopy = find_program('objcopy')
 
@@ -36,6 +39,11 @@ endif
 if get_option('efi_sbat_distro_id') == ''
     warning('-Defi_sbat_distro_id is unset, see README.md')
 endif
+
+configure_file(
+  output : 'config.h',
+  configuration : conf
+)
 
 pkgg = import('pkgconfig')
 pkgg.generate(

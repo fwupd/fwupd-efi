@@ -4,13 +4,15 @@
  * SPDX-License-Identifier: LGPL-2.1+
  */
 
+#include "config.h"
+
 #include <efi.h>
 #include <efilib.h>
 
 #include "fwup-cleanups.h"
 #include "fwup-common.h"
-#include "fwup-efi.h"
 #include "fwup-debug.h"
+#include "fwup-efi.h"
 
 #define UNUSED __attribute__((__unused__))
 #define GNVN_BUF_SIZE			1024
@@ -543,6 +545,9 @@ efi_main(EFI_HANDLE image, EFI_SYSTEM_TABLE *systab)
 
 	/* if SHIM_DEBUG is set, fwup_info info for our attached debugger */
 	fwup_debug_hook();
+
+	/* show the version to screen */
+	fwup_info(L"fwupd-efi version " PACKAGE_VERSION);
 
 	/* step 1: find and validate update state variables */
 	/* XXX TODO:
