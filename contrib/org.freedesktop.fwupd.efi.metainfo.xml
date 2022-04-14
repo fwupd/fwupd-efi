@@ -23,6 +23,16 @@
   <update_contact>richard_at_hughsie.com</update_contact>
   <content_rating type="oars-1.0"/>
   <releases>
+    <release version="1.3" date="2022-04-14">
+      <description>
+        <p>This release fixes the following bugs:</p>
+        <ul>
+          <li>Fix a regression when applying updates on an HP M60</li>
+          <li>Fix the ARM system crt0 name</li>
+          <li>Show the version when starting fwupd-efi</li>
+        </ul>
+      </description>
+    </release>
     <release version="1.2" date="2022-01-23">
       <description>
         <p>This release fixes the following bugs:</p>
