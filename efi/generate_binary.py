@@ -21,6 +21,8 @@ def _run_objcopy(args):
         "-j",
         ".sbat",
         "-j",
+        ".sbom",
+        "-j",
         ".sdata",
         "-j",
         ".data",

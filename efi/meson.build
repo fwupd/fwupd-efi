@@ -1,6 +1,25 @@
 generate_sbat = find_program('generate_sbat.py', native: true)
 generate_binary = find_program('generate_binary.py', native: true)
 
+# get source version, falling back to empty
+git = find_program('git', required : false)
+if git.found()
+  source_version = run_command(git, 'describe').stdout().strip()
+else
+  source_version = ''
+endif
+
+if uswid.found()
+  con2 = configuration_data()
+  con2.set('project_version', meson.project_version())
+  con2.set('source_version', source_version)
+  swid_xml = configure_file(
+    input : 'swid.xml.in',
+    output : 'swid.xml',
+    configuration : con2,
+  )
+endif
+
 efi_cc = get_option('efi-cc')
 efi_ld = get_option('efi-ld')
 efi_ldsdir = get_option('efi-ldsdir')
@@ -201,6 +220,20 @@ o_file5 = custom_target('fwup-sbat.o',
                           '--sbat-distro-version', get_option('efi_sbat_distro_version'),
                           '--sbat-distro-url', get_option('efi_sbat_distro_url'),
                         ])
+fwup_inputs = [o_file1, o_file2, o_file3, o_file4, o_file5]
+
+if uswid.found()
+  o_file6 = custom_target('fwup-sbom.o',
+                          output : 'fwup-sbom.o',
+                          command : [
+                            'uswid',
+                            '--cc', efi_cc,
+                            '--objcopy', objcopy,
+                            '--load', swid_xml,
+                            '--save', '@OUTPUT@',
+                          ])
+  fwup_inputs += o_file6
+endif
 
 fwupd_so_deps = []
 if efi_crtdir == join_paths(meson.current_build_dir(), 'crt0')
@@ -210,7 +243,7 @@ if efi_crtdir == join_paths(meson.current_build_dir(), 'crt0')
 endif
 
 so = custom_target('fwup.so',
-                   input : [o_file1, o_file2, o_file3, o_file4, o_file5],
+                   input : fwup_inputs,
                    output : 'fwup.so',
                    command : [efi_ld, '-o', '@OUTPUT@'] +
                              efi_ldflags + ['@INPUT@'] +
