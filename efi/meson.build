@@ -105,6 +105,9 @@ endif
 if host_cpu == 'arm' or (host_cpu == 'aarch64' and (objcopy_version.version_compare ('< 2.38') or coff_header_in_crt0 or uswid.found()))
   objcopy_manualsymbols = true
   generate_binary_extra = ['--objcopy-manualsymbols']
+elif host_cpu == 'loongarch64' and (objcopy_version.version_compare ('< 2.41') or coff_header_in_crt0)
+  objcopy_manualsymbols = true
+  generate_binary_extra = ['--objcopy-manualsymbols']
 else
   objcopy_manualsymbols = false
   generate_binary_extra = []
