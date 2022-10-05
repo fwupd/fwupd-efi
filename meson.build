@@ -10,6 +10,7 @@ conf.set_quoted('PACKAGE_VERSION', meson.project_version())
 
 cc = meson.get_compiler('c')
 objcopy = find_program('objcopy')
+objcopy_version = run_command(objcopy, '--version').stdout().split('\n')[0].split(' ')[-1]
 
 prefix = get_option('prefix')
 libdir = join_paths(prefix, get_option('libdir'))
