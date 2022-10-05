@@ -150,9 +150,9 @@ efi_ldflags = ['-T',
                '-L', efi_crtdir,
                '-L', efi_libdir,
                join_paths(efi_crtdir, arch_crt)]
-if host_cpu == 'aarch64' or host_cpu == 'arm'
-  # Aarch64 and ARM32 don't have an EFI capable objcopy. Use 'binary'
-  # instead, and add required symbols manually.
+if objcopy_version.version_compare ('< 2.38') and (host_cpu == 'aarch64' or host_cpu == 'arm')
+  # older objcopy for Aarch64 and ARM32 are not EFI capable.
+  # Use 'binary' instead, and add required symbols manually.
   efi_ldflags += ['--defsym=EFI_SUBSYSTEM=0xa']
   efi_format = ['-O', 'binary']
 else
