@@ -18,9 +18,8 @@ def _generate_sbat(args):
     FWUPD_SUMMARY = "Firmware update daemon"
     FWUPD_URL = "https://github.com/fwupd/fwupd-efi"
 
-    subprocess.run(
-        [args.cc, "-x", "c", "-c", "-o", args.outfile, "/dev/null"], check=True
-    )
+    cmd = args.cc.split() + ["-x", "c", "-c", "-o", args.outfile, "/dev/null"]
+    subprocess.run(cmd, check=True)
 
     # not specified
     if not args.sbat_distro_id:
