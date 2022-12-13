@@ -81,7 +81,7 @@ if get_option('efi_sbat_distro_id') != ''
 endif
 
 # is the system crt0 for arm and aarch64 new enough to know about SBAT?
-if host_cpu == 'aarch64' or host_cpu == 'arm'
+if objcopy_version.version_compare ('< 2.38') and (host_cpu == 'aarch64' or host_cpu == 'arm')
   if get_option('efi_sbat_distro_id') != ''
     arch_crt_source = 'crt0-efi-@0@.S'.format(gnu_efi_path_arch)
     cmd = run_command('grep', '-q', 'sbat', join_paths(efi_crtdir, arch_crt))
