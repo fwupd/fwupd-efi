@@ -18,8 +18,9 @@ def _generate_sbat(args):
     FWUPD_SUMMARY = "Firmware update daemon"
     FWUPD_URL = "https://github.com/fwupd/fwupd-efi"
 
+    cflags = args.cflags.split(" ")
     subprocess.run(
-        [args.cc, "-x", "c", "-c", "-o", args.outfile, "/dev/null"], check=True
+        [args.cc, "-x", "c", "-c", "-o", args.outfile, "/dev/null"] + cflags, check=True
     )
 
     # not specified
@@ -83,6 +84,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--cc", default="gcc", help="Compiler to use for generating sbat object"
     )
+    parser.add_argument("--cflags", help="C compiler flags to be used by CC")
     parser.add_argument(
         "--objcopy", default="objcopy", help="Binary file to use for objcopy"
     )
