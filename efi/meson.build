@@ -145,9 +145,11 @@ efi_ldflags = ['-T',
                '-L', efi_crtdir,
                '-L', efi_libdir,
                join_paths(efi_crtdir, arch_crt)]
+objcopy_manualsymbols = '0'
 if objcopy_version.version_compare ('< 2.38') and (host_cpu == 'aarch64' or host_cpu == 'arm')
   # older objcopy for Aarch64 and ARM32 are not EFI capable.
   # Use 'binary' instead, and add required symbols manually.
+  objcopy_manualsymbols = '1'
   efi_ldflags += ['--defsym=EFI_SUBSYSTEM=0xa']
   efi_format = ['-O', 'binary']
 else
@@ -222,6 +224,7 @@ app = custom_target(efi_name,
                       '--arch', gnu_efi_arch,
                       '--os', host_machine.system(),
                       '--objcopy', objcopy,
+                      '--objcopy-manualsymbols', objcopy_manualsymbols,
                       '--genpeimg', genpeimg.found() ? genpeimg : ''
                     ],
                     install : true,
