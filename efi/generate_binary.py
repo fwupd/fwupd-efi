@@ -36,9 +36,9 @@ def _run_objcopy(args):
         args.outfile,
     ]
 
-    # aarch64 and arm32 don't have an EFI capable objcopy
-    # Use 'binary' instead, and add required symbols manually
-    if args.arch in ["aarch64", "arm"]:
+    # older objcopy for Aarch64 and ARM32 are not EFI capable.
+    # Use "binary" instead, and add required symbols manually.
+    if args.objcopy_manualsymbols:
         argv.extend(["-O", "binary"])
     elif args.os == "freebsd":
         # `--target` option is missing and --input-target doesn't recognize
@@ -75,6 +75,11 @@ if __name__ == "__main__":
     parser.add_argument("--genpeimg", help="Binary file to use for genpeimg")
     parser.add_argument("--arch", default="x86_64", help="EFI architecture")
     parser.add_argument("--os", help="OS type")
+    parser.add_argument(
+        "--objcopy-manualsymbols",
+        type=int,
+        help="whether adding symbols direct to binary",
+    )
     parser.add_argument("infile", help="Input file")
     parser.add_argument("outfile", help="Output file")
     _args = parser.parse_args()
