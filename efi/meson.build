@@ -76,7 +76,7 @@ if get_option('efi_sbat_distro_id') != ''
 endif
 
 # is the system crt0 for arm and aarch64 new enough to know about SBAT?
-if objcopy_version.version_compare ('< 2.38') and (host_cpu == 'aarch64' or host_cpu == 'arm')
+if host_cpu == 'arm' or (objcopy_version.version_compare ('< 2.38') and host_cpu == 'aarch64')
   if get_option('efi_sbat_distro_id') != ''
     arch_crt_source = 'crt0-efi-@0@.S'.format(gnu_efi_path_arch)
     cmd = run_command('grep', '-q', 'sbat', join_paths(efi_crtdir, arch_crt))
@@ -146,7 +146,7 @@ efi_ldflags = ['-T',
                '-L', efi_libdir,
                join_paths(efi_crtdir, arch_crt)]
 objcopy_manualsymbols = '0'
-if objcopy_version.version_compare ('< 2.38') and (host_cpu == 'aarch64' or host_cpu == 'arm')
+if host_cpu == 'arm' or (objcopy_version.version_compare ('< 2.38') and host_cpu == 'aarch64')
   # older objcopy for Aarch64 and ARM32 are not EFI capable.
   # Use 'binary' instead, and add required symbols manually.
   objcopy_manualsymbols = '1'
