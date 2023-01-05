@@ -4,6 +4,9 @@ set -x
 shopt -s extglob
 rm -rf build/
 
+# disable the safe directory feature
+git config --global safe.directory "*"
+
 if [ "$OS" = "fedora" ]; then
     meson build
     VERSION=`meson introspect build --projectinfo | jq -r .version`
