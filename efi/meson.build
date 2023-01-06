@@ -34,6 +34,16 @@ if host_cpu == 'x86_64' and host_machine.system() == 'freebsd'
   lds_os = '_fbsd'
 endif
 
+# older objcopy for Aarch64 and ARM32 are not EFI capable.
+# Use 'binary' instead, and add required symbols manually.
+if host_cpu == 'arm' or (objcopy_version.version_compare ('< 2.38') and host_cpu == 'aarch64')
+  objcopy_manualsymbols = true
+  generate_binary_extra = ['--objcopy-manual-symbols']
+else
+  objcopy_manualsymbols = false
+  generate_binary_extra = []
+endif
+
 arch_lds = 'efi.lds'
 arch_crt = 'crt0.o'
 if efi_ldsdir == ''
@@ -76,7 +86,7 @@ if get_option('efi_sbat_distro_id') != ''
 endif
 
 # is the system crt0 for arm and aarch64 new enough to know about SBAT?
-if host_cpu == 'arm' or (objcopy_version.version_compare ('< 2.38') and host_cpu == 'aarch64')
+if objcopy_manualsymbols
   if get_option('efi_sbat_distro_id') != ''
     arch_crt_source = 'crt0-efi-@0@.S'.format(gnu_efi_path_arch)
     cmd = run_command('grep', '-q', 'sbat', join_paths(efi_crtdir, arch_crt))
@@ -145,11 +155,10 @@ efi_ldflags = ['-T',
                '-L', efi_crtdir,
                '-L', efi_libdir,
                join_paths(efi_crtdir, arch_crt)]
-objcopy_manualsymbols = '0'
-if host_cpu == 'arm' or (objcopy_version.version_compare ('< 2.38') and host_cpu == 'aarch64')
+
+if objcopy_manualsymbols
   # older objcopy for Aarch64 and ARM32 are not EFI capable.
   # Use 'binary' instead, and add required symbols manually.
-  objcopy_manualsymbols = '1'
   efi_ldflags += ['--defsym=EFI_SUBSYSTEM=0xa']
   efi_format = ['-O', 'binary']
 else
@@ -224,9 +233,9 @@ app = custom_target(efi_name,
                       '--arch', gnu_efi_arch,
                       '--os', host_machine.system(),
                       '--objcopy', objcopy,
-                      '--objcopy-manualsymbols', objcopy_manualsymbols,
                       '--genpeimg', genpeimg.found() ? genpeimg : ''
-                    ],
+                    ]
+                    + generate_binary_extra,
                     install : true,
                     install_dir : efi_app_location)
 
