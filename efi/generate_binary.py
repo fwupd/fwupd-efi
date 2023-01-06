@@ -77,7 +77,7 @@ if __name__ == "__main__":
     parser.add_argument("--os", help="OS type")
     parser.add_argument(
         "--objcopy-manualsymbols",
-        type=int,
+        action="store_true",
         help="whether adding symbols direct to binary",
     )
     parser.add_argument("infile", help="Input file")
