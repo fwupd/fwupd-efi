@@ -34,16 +34,6 @@ if host_cpu == 'x86_64' and host_machine.system() == 'freebsd'
   lds_os = '_fbsd'
 endif
 
-# older objcopy for Aarch64 and ARM32 are not EFI capable.
-# Use 'binary' instead, and add required symbols manually.
-if host_cpu == 'arm' or (objcopy_version.version_compare ('< 2.38') and host_cpu == 'aarch64')
-  objcopy_manualsymbols = true
-  generate_binary_extra = ['--objcopy-manual-symbols']
-else
-  objcopy_manualsymbols = false
-  generate_binary_extra = []
-endif
-
 arch_lds = 'efi.lds'
 arch_crt = 'crt0.o'
 if efi_ldsdir == ''
@@ -73,10 +63,27 @@ else
     error('Cannot find @0@'.format(arch_lds))
   endif
 endif
+efi_crtdir = efi_ldsdir
+
+# If using objcopy, crt0 must not include the PE/COFF header
+if run_command('grep', '-q', 'coff_header', join_paths(efi_crtdir, arch_crt), check: false).returncode() == 0
+        coff_header_in_crt0 = true
+else
+        coff_header_in_crt0 = false
+endif
+
+# older objcopy for Aarch64 and ARM32 are not EFI capable.
+# Use 'binary' instead, and add required symbols manually.
+if host_cpu == 'arm' or (host_cpu == 'aarch64' and (objcopy_version.version_compare ('< 2.38') or coff_header_in_crt0))
+  objcopy_manualsymbols = true
+  generate_binary_extra = ['--objcopy-manualsymbols']
+else
+  objcopy_manualsymbols = false
+  generate_binary_extra = []
+endif
 
 # is the system linker script new enough to know about SBAT?
 # i.e. gnu-efi with https://github.com/vathpela/gnu-efi/pull/14 has been installed
-efi_crtdir = efi_ldsdir
 if get_option('efi_sbat_distro_id') != ''
   cmd = run_command('grep', '-q', 'sbat', join_paths(efi_ldsdir, arch_lds))
   if cmd.returncode() != 0
