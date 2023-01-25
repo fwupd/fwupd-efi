@@ -58,7 +58,7 @@ def _run_genpeimg(args):
     if not args.genpeimg:
         return
 
-    argv = [args.genpeimg, "-d", "+d", "+n", "-d", "+s", args.outfile]
+    argv = [args.genpeimg, "-d", "+d", "-d", "+n", "-d", "+s", args.outfile]
     try:
         subprocess.run(argv, check=True)
     except FileNotFoundError as e:
