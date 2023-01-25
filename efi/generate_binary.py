@@ -66,6 +66,23 @@ def _run_genpeimg(args):
         sys.exit(1)
 
 
+def _add_nx_pefile(args):
+    # unnecessary if we have genpeimg
+    if args.genpeimg:
+        return
+    try:
+        import pefile
+    except ImportError:
+        print("Unable to add NX support to binaries without genpeimg or python3-pefile")
+        sys.exit(1)
+
+    pe = pefile.PE(args.outfile)
+    pe.OPTIONAL_HEADER.DllCharacteristics |= pefile.DLL_CHARACTERISTICS[
+        "IMAGE_DLLCHARACTERISTICS_NX_COMPAT"
+    ]
+    pe.write(args.outfile)
+
+
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
@@ -85,5 +102,6 @@ if __name__ == "__main__":
     _args = parser.parse_args()
     _run_objcopy(_args)
     _run_genpeimg(_args)
+    _add_nx_pefile(_args)
 
     sys.exit(0)
