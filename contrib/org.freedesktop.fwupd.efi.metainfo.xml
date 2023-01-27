@@ -23,6 +23,18 @@
   <update_contact>richard_at_hughsie.com</update_contact>
   <content_rating type="oars-1.0"/>
   <releases>
+    <release version="1.4" date="2023-01-27">
+      <description>
+        <p>This release fixes the following bugs:</p>
+        <ul>
+          <li>Add additional checks for incompatible CRT0</li>
+          <li>Align sections to 512 bytes</li>
+          <li>Generate images that are NX compatible</li>
+          <li>Use manual symbols mode on ARM32</li>
+          <li>Use objcopy to build arm/aarch64 binaries for new binutils</li>
+        </ul>
+      </description>
+    </release>
     <release version="1.3" date="2022-04-14">
       <description>
         <p>This release fixes the following bugs:</p>
