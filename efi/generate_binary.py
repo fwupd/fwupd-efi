@@ -10,6 +10,13 @@
 import subprocess
 import sys
 import argparse
+import os
+import struct
+
+COFF_HDR_OFFSET = 0x80
+OPTIONALHDR_CHECKSUM = COFF_HDR_OFFSET + 0x58
+OPTIONALHDR_DLLCHARACTERISTICS = COFF_HDR_OFFSET + 0x5E
+PEHEADER_TIMEDATASTAMP = COFF_HDR_OFFSET + 0x8
 
 
 def _run_objcopy(args):
@@ -66,6 +73,27 @@ def _run_genpeimg(args):
         sys.exit(1)
 
 
+def generate_checksum(data):
+    checksum_offset: int = OPTIONALHDR_CHECKSUM
+    checksum: int = 0
+    remainder: int = len(data) % 4
+    data_len: int = len(data) + ((4 - remainder) * (remainder != 0))
+    for i in range(int(data_len / 4)):
+        if i == int(checksum_offset / 4):
+            continue
+        if i + 1 == (int(data_len / 4)) and remainder:
+            dword = struct.unpack("I", data[i * 4 :] + (b"\0" * (4 - remainder)))[0]
+        else:
+            dword = struct.unpack("I", data[i * 4 : i * 4 + 4])[0]
+        checksum += dword
+        if checksum >= 2**32:
+            checksum = (checksum & 0xFFFFFFFF) + (checksum >> 32)
+    checksum = (checksum & 0xFFFF) + (checksum >> 16)
+    checksum = checksum + (checksum >> 16)
+    checksum = checksum & 0xFFFF
+    return checksum + len(data)
+
+
 def _add_nx_pefile(args):
     # unnecessary if we have genpeimg
     if args.genpeimg:
@@ -73,8 +101,26 @@ def _add_nx_pefile(args):
     try:
         import pefile
     except ImportError:
-        print("Unable to add NX support to binaries without genpeimg or python3-pefile")
-        sys.exit(1)
+        print("Adding NX support manually to the binary")
+        with open(args.outfile, "r+b") as fh:
+            buf = bytearray(fh.read(os.path.getsize(args.outfile)))
+            fh.seek(0)
+            DllCharacteristics = struct.unpack_from(
+                "<H", buf, OPTIONALHDR_DLLCHARACTERISTICS
+            )[0]
+            DllCharacteristics |= 0x100
+            struct.pack_into(
+                "<H", buf, OPTIONALHDR_DLLCHARACTERISTICS, DllCharacteristics
+            )
+
+            # set the timestamp to 0
+            struct.pack_into("<I", buf, PEHEADER_TIMEDATASTAMP, 0x0)
+
+            # as we have set the NX COMPAT bit, regenerate the checksum
+            struct.pack_into("<I", buf, OPTIONALHDR_CHECKSUM, generate_checksum(buf))
+            fh.write(buf)
+
+        return
 
     pe = pefile.PE(args.outfile)
     pe.OPTIONAL_HEADER.DllCharacteristics |= pefile.DLL_CHARACTERISTICS[
