@@ -95,6 +95,11 @@ else
         coff_header_in_crt0 = false
 endif
 
+# For NX compat, we must ensure we have .note.GNU-stack
+if run_command('grep', '-q', '.note.GNU-stack', join_paths(efi_crtdir, arch_crt), check: false).returncode() != 0
+    error('Cannot find NX section in @0@, update to gnu-efi 3.0.15+'.format(join_paths(efi_crtdir, arch_crt)))
+endif
+
 # older objcopy for Aarch64 and ARM32 are not EFI capable.
 # Use 'binary' instead, and add required symbols manually.
 if host_cpu == 'arm' or (host_cpu == 'aarch64' and (objcopy_version.version_compare ('< 2.38') or coff_header_in_crt0))
@@ -119,7 +124,6 @@ endif
 # is the system crt0 for arm and aarch64 new enough to know about SBAT?
 if objcopy_manualsymbols
   if get_option('efi_sbat_distro_id') != ''
-    arch_crt_source = 'crt0-efi-@0@.S'.format(gnu_efi_path_arch)
     cmd = run_command('grep', '-q', 'sbat', join_paths(efi_crtdir, arch_crt))
     if cmd.returncode() != 0
       warning('Cannot find SBAT section in @0@, using local copy'.format(join_paths(efi_crtdir, arch_crt)))
@@ -186,6 +190,12 @@ efi_ldflags = ['-T',
                '-L', efi_crtdir,
                '-L', efi_libdir,
                join_paths(efi_crtdir, arch_crt)]
+
+if host_cpu == 'aarch64'
+# Don't use 64KiB pages
+  efi_ldflags += ['-z', 'common-page-size=4096']
+  efi_ldflags += ['-z', 'max-page-size=4096']
+endif
 
 if objcopy_manualsymbols
   # older objcopy for Aarch64 and ARM32 are not EFI capable.

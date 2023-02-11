@@ -31,9 +31,9 @@ def _run_objcopy(args):
         "-j",
         ".rodata",
         "-j",
+        ".areloc",
+        "-j",
         ".rel*",
-        "--section-alignment",
-        "512",
         args.infile,
         args.outfile,
     ]
