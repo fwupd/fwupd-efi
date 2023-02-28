@@ -5,7 +5,11 @@ SECTIONS
 {
   . = 0;
   ImageBase = .;
-  .hash : { *(.hash) }	/* this MUST come first! */
+  /* .hash and/or .gnu.hash MUST come first! */
+  .hash : { *(.hash) }
+  .gnu.hash : { *(.gnu.hash) }
+  .eh_frame : { *(.eh_frame) }
+  .gcc_except_table : { *(.gcc_except_table*) }
   . = ALIGN(4096);
   .text :
   {
@@ -13,81 +17,81 @@ SECTIONS
    *(.text)
    *(.text.*)
    *(.gnu.linkonce.t.*)
-   _etext = .;
+   *(.plt)
+   . = ALIGN(16);
   }
-  .reloc :
-  {
-   *(.reloc)
-  }
-  . = ALIGN(4096);
-  .note.gnu.build-id : {
-    *(.note.gnu.build-id)
-  }
-  . = ALIGN(4096);
-  .data.ident : {
-    *(.data.ident)
-  }
-
+  _etext = .;
+  _text_size = _etext - _text;
   . = ALIGN(4096);
   .data :
   {
    _data = .;
-   *(.rodata*)
+   *(.got.plt)
+   *(.got)
    *(.data)
    *(.data1)
    *(.data.*)
-   *(.sdata)
-   *(.got.plt)
-   *(.got)
+
    /* the EFI loader doesn't seem to like a .bss section, so we stick
       it all into .data: */
-   *(.sbss)
-   *(.scommon)
    *(.dynbss)
-   *(.bss)
+   *(.bss*)
    *(COMMON)
   }
+  .note.gnu.build-id : { *(.note.gnu.build-id) }
 
-  . = ALIGN(4096);
-  .vendor_cert :
-  {
-   *(.vendor_cert)
-  }
   . = ALIGN(4096);
   .dynamic  : { *(.dynamic) }
   . = ALIGN(4096);
   .rel :
   {
-    *(.rel.data)
-    *(.rel.data.*)
+    *(.rel.text*)
+    *(.rel.data*)
     *(.rel.got)
+    *(.rel.dyn)
     *(.rel.stab)
     *(.data.rel.ro.local)
     *(.data.rel.local)
     *(.data.rel.ro)
     *(.data.rel*)
   }
-  _edata = .;
-  _data_size = . - _data;
+  . = ALIGN(4096);
+  .rel.plt : { *(.rel.plt) }
+  . = ALIGN(4096);
+  .rodata : { *(.rodata*) }
+  /*
+   * Note that _sbat must be the beginning of the data, and _esbat must be the
+   * end and must be before any section padding.  The sbat self-check uses
+   * _esbat to find the bounds of the data, and if the padding is included, the
+   * CSV parser (correctly) rejects the data as having NUL values in one of the
+   * required columns.
+   */
   . = ALIGN(4096);
   .sbat :
   {
     _sbat = .;
     *(.sbat)
     *(.sbat.*)
+    _esbat = .;
+    . = ALIGN(4096);
+    _epsbat = .;
   }
-  _esbat = .;
-  _sbat_size = . - _sbat;
-
+  _sbat_size = _epsbat - _sbat;
+  _sbat_vsize = _esbat - _sbat;
+  _edata = .;
+  _data_size = _edata - _etext;
+  . = ALIGN(4096);
+  .reloc :		/* This is the PECOFF .reloc section! */
+  {
+    KEEP (*(.reloc))
+  }
   . = ALIGN(4096);
   .dynsym   : { *(.dynsym) }
   . = ALIGN(4096);
   .dynstr   : { *(.dynstr) }
-  . = ALIGN(4096);
   /DISCARD/ :
   {
     *(.rel.reloc)
-    *(.eh_frame)
     *(.note.GNU-stack)
   }
   .comment 0 : { *(.comment) }
