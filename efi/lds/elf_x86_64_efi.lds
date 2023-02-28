@@ -6,12 +6,12 @@ SECTIONS
 {
   . = 0;
   ImageBase = .;
-  .hash : { *(.hash) }	/* this MUST come first! */
+  /* .hash and/or .gnu.hash MUST come first! */
+  .hash : { *(.hash) }
+  .gnu.hash : { *(.gnu.hash) }
   . = ALIGN(4096);
-  .eh_frame :
-  {
-    *(.eh_frame)
-  }
+  .eh_frame : { *(.eh_frame) }
+  .gcc_except_table : { *(.gcc_except_table*) }
   . = ALIGN(4096);
   .text :
   {
@@ -19,68 +19,73 @@ SECTIONS
    *(.text)
    *(.text.*)
    *(.gnu.linkonce.t.*)
-   _etext = .;
+   *(.plt)
+   . = ALIGN(16);
   }
+  _etext = .;
+  _text_size = _etext - _text;
   . = ALIGN(4096);
   .reloc :
   {
-   *(.reloc)
-  }
-  . = ALIGN(4096);
-  .note.gnu.build-id : {
-    *(.note.gnu.build-id)
-  }
-
-  . = ALIGN(4096);
-  .data.ident : {
-    *(.data.ident)
+   KEEP (*(.reloc))
   }
 
   . = ALIGN(4096);
   .data :
   {
    _data = .;
-   *(.rodata*)
    *(.got.plt)
    *(.got)
    *(.data*)
    *(.sdata)
+
    /* the EFI loader doesn't seem to like a .bss section, so we stick
       it all into .data: */
    *(.sbss)
    *(.scommon)
    *(.dynbss)
-   *(.bss)
+   *(.bss*)
    *(COMMON)
    *(.rel.local)
   }
+  .note.gnu.build-id : { *(.note.gnu.build-id) }
 
-  . = ALIGN(4096);
-  .vendor_cert :
-  {
-   *(.vendor_cert)
-  }
+  _edata = .;
+  _data_size = _edata - _etext;
   . = ALIGN(4096);
   .dynamic  : { *(.dynamic) }
   . = ALIGN(4096);
   .rela :
   {
+    *(.rela.text*)
     *(.rela.data*)
-    *(.rela.got*)
-    *(.rela.stab*)
+    *(.rela.got)
+    *(.rela.dyn)
+    *(.rela.stab)
   }
-  _edata = .;
-  _data_size = . - _data;
+  . = ALIGN(4096);
+  .rela.plt : { *(.rela.plt) }
+  . = ALIGN(4096);
+  .rodata : { *(.rodata*) }
+  /*
+   * Note that _sbat must be the beginning of the data, and _esbat must be the
+   * end and must be before any section padding.  The sbat self-check uses
+   * _esbat to find the bounds of the data, and if the padding is included, the
+   * CSV parser (correctly) rejects the data as having NUL values in one of the
+   * required columns.
+   */
   . = ALIGN(4096);
   .sbat :
   {
     _sbat = .;
     *(.sbat)
     *(.sbat.*)
+    _esbat = .;
+    . = ALIGN(4096);
+    _epsbat = .;
   }
-  _esbat = .;
-  _sbat_size = . - _sbat;
-
+  _sbat_size = _epsbat - _sbat;
+  _sbat_vsize = _esbat - _sbat;
   . = ALIGN(4096);
   .dynsym   : { *(.dynsym) }
   . = ALIGN(4096);
@@ -89,9 +94,7 @@ SECTIONS
   .ignored.reloc :
   {
     *(.rela.reloc)
-    *(.eh_frame)
     *(.note.GNU-stack)
   }
   .comment 0 : { *(.comment) }
-  .note.gnu.build-id : { *(.note.gnu.build-id) }
 }
