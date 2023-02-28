@@ -38,7 +38,7 @@ endif
 efi_libdir = get_option('efi-libdir')
 if efi_libdir == ''
   fs = import('fs')
-  multi = run_command(cc.cmd_array(), '-print-multi-os-directory').stdout().strip()
+  multi = run_command(cc.cmd_array(), '-print-multi-os-directory', check: true).stdout().strip()
   efi_libdir = join_paths('/usr/lib/', multi)
   if not fs.is_dir(join_paths(efi_libdir, 'gnuefi'))
     efi_libdir = '/usr/lib'
@@ -61,26 +61,26 @@ arch_lds = 'efi.lds'
 arch_crt = 'crt0.o'
 if efi_ldsdir == ''
   efi_ldsdir = join_paths(efi_libdir, 'gnuefi', gnu_efi_path_arch)
-  cmd = run_command('test', '-f', join_paths(efi_ldsdir, arch_lds))
+  cmd = run_command('test', '-f', join_paths(efi_ldsdir, arch_lds), check: false)
   if cmd.returncode() != 0
     arch_lds = 'elf_@0@@1@_efi.lds'.format(gnu_efi_path_arch, lds_os)
     arch_crt = 'crt0-efi-@0@.o'.format(gnu_efi_path_arch)
     efi_ldsdir = join_paths(efi_libdir, 'gnuefi')
-    cmd = run_command('test', '-f', join_paths(efi_ldsdir, arch_lds))
+    cmd = run_command('test', '-f', join_paths(efi_ldsdir, arch_lds), check: false)
   endif
   if cmd.returncode() != 0
     efi_ldsdir = efi_libdir
-    cmd = run_command('test', '-f', join_paths(efi_ldsdir, arch_lds))
+    cmd = run_command('test', '-f', join_paths(efi_ldsdir, arch_lds), check: false)
     if cmd.returncode() != 0
       error('Cannot find @0@'.format(arch_lds))
     endif
   endif
 else
-  cmd = run_command('test', '-f', join_paths(efi_ldsdir, arch_lds))
+  cmd = run_command('test', '-f', join_paths(efi_ldsdir, arch_lds), check: false)
   if cmd.returncode() != 0
     arch_lds = 'elf_@0@@1@_efi.lds'.format(gnu_efi_path_arch, lds_os)
     arch_crt = 'crt0-efi-@0@.o'.format(gnu_efi_path_arch)
-    cmd = run_command('test', '-f', join_paths(efi_ldsdir, arch_lds))
+    cmd = run_command('test', '-f', join_paths(efi_ldsdir, arch_lds), check: false)
   endif
   if cmd.returncode() != 0
     error('Cannot find @0@'.format(arch_lds))
@@ -113,7 +113,7 @@ endif
 # is the system linker script new enough to know about SBAT?
 # i.e. gnu-efi with https://github.com/vathpela/gnu-efi/pull/14 has been installed
 if get_option('efi_sbat_distro_id') != ''
-  cmd = run_command('grep', '-q', 'sbat', join_paths(efi_ldsdir, arch_lds))
+  cmd = run_command('grep', '-q', 'sbat', join_paths(efi_ldsdir, arch_lds), check: false)
   if cmd.returncode() != 0
     warning('Cannot find SBAT section in @0@, using local copy'.format(join_paths(efi_ldsdir, arch_lds)))
     efi_ldsdir = join_paths(meson.current_source_dir(), 'lds')
@@ -124,7 +124,7 @@ endif
 # is the system crt0 for arm and aarch64 new enough to know about SBAT?
 if objcopy_manualsymbols
   if get_option('efi_sbat_distro_id') != ''
-    cmd = run_command('grep', '-q', 'sbat', join_paths(efi_crtdir, arch_crt))
+    cmd = run_command('grep', '-q', 'sbat', join_paths(efi_crtdir, arch_crt), check: false)
     if cmd.returncode() != 0
       warning('Cannot find SBAT section in @0@, using local copy'.format(join_paths(efi_crtdir, arch_crt)))
       # The gnuefi libraries are still needed
@@ -207,7 +207,7 @@ else
   efi_format = ['--target=efi-app-@0@'.format(gnu_efi_arch)]
 endif
 
-libgcc_file_name = run_command(cc.cmd_array(), '-print-libgcc-file-name').stdout().strip()
+libgcc_file_name = run_command(cc.cmd_array(), '-print-libgcc-file-name', check: true).stdout().strip()
 efi_name = 'fwupd@0@.efi'.format(EFI_MACHINE_TYPE_NAME)
 
 o_files = []
