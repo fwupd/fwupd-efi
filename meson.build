@@ -33,6 +33,9 @@ elif host_cpu == 'arm'
 elif host_cpu == 'aarch64'
         EFI_MACHINE_TYPE_NAME = 'aa64'
         gnu_efi_arch = 'aarch64'
+elif host_cpu == 'riscv64'
+        EFI_MACHINE_TYPE_NAME = 'riscv64'
+        gnu_efi_arch = 'riscv64'
 else
         error('Unknown host_cpu ' + host_cpu)
 endif

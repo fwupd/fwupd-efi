@@ -93,7 +93,7 @@ endif
 
 # older objcopy for Aarch64 and ARM32 are not EFI capable.
 # Use 'binary' instead, and add required symbols manually.
-if host_cpu == 'arm' or (host_cpu == 'aarch64' and (objcopy_version.version_compare ('< 2.38') or coff_header_in_crt0))
+if host_cpu == 'arm' or host_cpu == 'riscv64' or (host_cpu == 'aarch64' and (objcopy_version.version_compare ('< 2.38') or coff_header_in_crt0))
   objcopy_manualsymbols = true
   generate_binary_extra = ['--objcopy-manualsymbols']
 else
