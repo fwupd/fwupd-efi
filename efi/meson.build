@@ -112,6 +112,7 @@ if get_option('efi_sbat_distro_id') != ''
   if cmd.returncode() != 0
     warning('Cannot find SBAT section in @0@, using local copy'.format(join_paths(efi_ldsdir, arch_lds)))
     efi_ldsdir = join_paths(meson.current_source_dir(), 'lds')
+    arch_lds = 'elf_@0@@1@_efi.lds'.format(gnu_efi_arch, lds_os)
   endif
 endif
 
