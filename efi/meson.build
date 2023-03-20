@@ -37,8 +37,12 @@ endif
 
 efi_libdir = get_option('efi-libdir')
 if efi_libdir == ''
+  fs = import('fs')
   multi = run_command(cc.cmd_array(), '-print-multi-os-directory').stdout().strip()
   efi_libdir = join_paths('/usr/lib/', multi)
+  if not fs.is_dir(join_paths(efi_libdir, 'gnuefi'))
+    efi_libdir = '/usr/lib'
+  endif
 endif
 
 have_gnu_efi = gnu_efi_path_arch != '' and efi_libdir != ''
