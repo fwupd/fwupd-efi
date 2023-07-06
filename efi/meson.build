@@ -192,7 +192,7 @@ efi_ldflags = ['-T',
                '-L', efi_libdir,
                join_paths(efi_crtdir, arch_crt)]
 
-if host_cpu == 'aarch64'
+if host_cpu == 'aarch64' or host_cpu == 'arm'
 # Don't use 64KiB pages
   efi_ldflags += ['-z', 'common-page-size=4096']
   efi_ldflags += ['-z', 'max-page-size=4096']
