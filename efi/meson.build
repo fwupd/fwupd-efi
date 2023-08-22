@@ -156,7 +156,7 @@ compile_args = ['-Og',
                 '-fno-strict-aliasing',
                 '-fno-stack-protector',
                 '-fno-stack-check',
-                '-fno-merge-constants',
+                '-fno-merge-all-constants',
                 '-Wsign-compare',
                 '-Wno-missing-field-initializers',
                 '-Wno-address-of-packed-member',
@@ -165,6 +165,8 @@ compile_args = ['-Og',
                 '-I.',
                 '-isystem', efi_incdir,
                 '-isystem', join_paths(efi_incdir, gnu_efi_path_arch)]
+# clang only has fno-merge-all-constants
+compile_args += cc.first_supported_argument('-fno-merge-constants')
 if get_option('werror')
     compile_args += '-Werror'
 endif
