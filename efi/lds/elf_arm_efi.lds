@@ -101,6 +101,17 @@ SECTIONS
   } =0
   _sbat_size = _epsbat - _sbat;
   _sbat_vsize = _esbat - _sbat;
+  . = ALIGN(4096);
+  .sbom :
+  {
+    _sbom = .;
+    *(.sbom)
+    _esbom = .;
+    . = ALIGN(4096);
+    _epsbom = .;
+  } =0
+  _sbom_size = _epsbom - _sbom;
+  _sbom_vsize = _esbom - _sbom;
   _image_end = .;
   _alldata_size = _image_end - _reloc;
 
