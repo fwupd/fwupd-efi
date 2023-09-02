@@ -87,6 +87,8 @@ SECTIONS
   _sbat_size = _epsbat - _sbat;
   _sbat_vsize = _esbat - _sbat;
   . = ALIGN(4096);
+  .sbom : { *(.sbom) }
+  . = ALIGN(4096);
   .dynsym   : { *(.dynsym) }
   . = ALIGN(4096);
   .dynstr   : { *(.dynstr) }
