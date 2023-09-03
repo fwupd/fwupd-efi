@@ -159,6 +159,19 @@ section_table:
 	.2byte	0			// NumberOfLineNumbers
 	.4byte	0x40000040		// Characteristics (section flags)
 #endif
+#ifdef USING_SBOM
+	.ascii	".sbom\0\0\0"
+	.4byte	_sbom_vsize - ImageBase		// VirtualSize
+	.4byte	_sbom - ImageBase	// VirtualAddress
+	.4byte	_sbom_size - ImageBase		// SizeOfRawData
+	.4byte	_sbom - ImageBase	// PointerToRawData
+
+	.4byte	0		// PointerToRelocations (0 for executables)
+	.4byte	0		// PointerToLineNumbers (0 for executables)
+	.2byte	0		// NumberOfRelocations  (0 for executables)
+	.2byte	0		// NumberOfLineNumbers  (0 for executables)
+	.4byte	0x40000040	// Characteristics (section flags)
+#endif
 
 .balign 256
 .globl	_start

@@ -216,6 +216,10 @@ if objcopy_manualsymbols
     compile_args += ['-DUSING_SBAT']
     nr_sections = nr_sections + 1
   endif
+  if uswid.found()
+    compile_args += ['-DUSING_SBOM']
+    nr_sections = nr_sections + 1
+  endif
   compile_args += ['-DNR_SECTIONS=@0@'.format(nr_sections)]
 endif
 
