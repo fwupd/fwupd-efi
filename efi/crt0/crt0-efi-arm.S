@@ -31,7 +31,7 @@ pe_header:
 	.2byte 	0
 coff_header:
 	.2byte	0x1c2				// Mixed ARM/Thumb
-	.2byte	5				// nr_sections
+	.2byte	NR_SECTIONS		        // nr_sections
 	.4byte	0 				// TimeDateStamp
 	.4byte	0				// PointerToSymbolTable
 	.4byte	0				// NumberOfSymbols
@@ -147,7 +147,7 @@ section_table:
 	.2byte	0			// NumberOfRelocations
 	.2byte	0			// NumberOfLineNumbers
 	.4byte	0x40000040		// Characteristics (section flags)
-
+#ifdef USING_SBAT
 	.ascii	".sbat\0\0\0"
 	.4byte	_sbat_vsize - ImageBase			// VirtualSize
 	.4byte	_sbat - ImageBase			// VirtualAddress
@@ -158,6 +158,7 @@ section_table:
 	.2byte	0			// NumberOfRelocations
 	.2byte	0			// NumberOfLineNumbers
 	.4byte	0x40000040		// Characteristics (section flags)
+#endif
 
 .balign 256
 .globl	_start

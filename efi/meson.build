@@ -209,6 +209,16 @@ else
   efi_format = ['--target=efi-app-@0@'.format(gnu_efi_arch)]
 endif
 
+# Section data
+if objcopy_manualsymbols
+  nr_sections = 4
+  if get_option('efi_sbat_distro_id') != ''
+    compile_args += ['-DUSING_SBAT']
+    nr_sections = nr_sections + 1
+  endif
+  compile_args += ['-DNR_SECTIONS=@0@'.format(nr_sections)]
+endif
+
 libgcc_file_name = run_command(cc.cmd_array(), '-print-libgcc-file-name', check: true).stdout().strip()
 efi_name = 'fwupd@0@.efi'.format(EFI_MACHINE_TYPE_NAME)
 
