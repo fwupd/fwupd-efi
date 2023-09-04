@@ -102,7 +102,7 @@ endif
 
 # older objcopy for Aarch64 and ARM32 are not EFI capable.
 # Use 'binary' instead, and add required symbols manually.
-if host_cpu == 'arm' or (host_cpu == 'aarch64' and (objcopy_version.version_compare ('< 2.38') or coff_header_in_crt0))
+if host_cpu == 'arm' or (host_cpu == 'aarch64' and (objcopy_version.version_compare ('< 2.38') or coff_header_in_crt0 or uswid.found()))
   objcopy_manualsymbols = true
   generate_binary_extra = ['--objcopy-manualsymbols']
 else
@@ -121,6 +121,13 @@ if get_option('efi_sbat_distro_id') != ''
   endif
 endif
 
+# SBOM is never in system lds
+if uswid.found()
+  warning('Switching to local copy of linker script as using SBOM')
+  efi_ldsdir = join_paths(meson.current_source_dir(), 'lds')
+  arch_lds = 'elf_@0@@1@_efi.lds'.format(gnu_efi_arch, lds_os)
+endif
+
 # is the system crt0 for arm and aarch64 new enough to know about SBAT?
 if objcopy_manualsymbols
   if get_option('efi_sbat_distro_id') != ''
@@ -132,6 +139,15 @@ if objcopy_manualsymbols
       efi_crtdir = join_paths(meson.current_build_dir(), 'crt0')
       efi_ldsdir = join_paths(meson.current_source_dir(), 'lds')
     endif
+  endif
+endif
+
+# SBOM not in system crt0
+if objcopy_manualsymbols
+  if uswid.found()
+    warning('Switching to local copy of crt0 as using SBOM')
+    efi_crtdir = join_paths(meson.current_build_dir(), 'crt0')
+    efi_ldsdir = join_paths(meson.current_source_dir(), 'lds')
   endif
 endif
 
