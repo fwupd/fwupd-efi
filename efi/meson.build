@@ -285,6 +285,11 @@ o_files += custom_target('fwup-sbat.o',
                         ])
 
 if uswid.found()
+  if uswid.version().version_compare('>=0.4.3')
+    uswid_cflags = ['--cflags', ' '.join(compile_args)]
+  else
+    uswid_cflags = []
+  endif
   o_files += custom_target('fwup-sbom.o',
                           output : 'fwup-sbom.o',
                           command : [
@@ -293,7 +298,7 @@ if uswid.found()
                             '--objcopy', objcopy,
                             '--load', swid_xml,
                             '--save', '@OUTPUT@',
-                          ])
+                          ] + uswid_cflags)
 endif
 
 fwupd_so_deps = []
