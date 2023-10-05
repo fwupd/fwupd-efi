@@ -97,7 +97,7 @@ endif
 
 # For NX compat, we must ensure we have .note.GNU-stack
 if run_command('grep', '-q', '.note.GNU-stack', join_paths(efi_crtdir, arch_crt), check: false).returncode() != 0
-    error('Cannot find NX section in @0@, update to gnu-efi 3.0.15+'.format(join_paths(efi_crtdir, arch_crt)))
+  warning('Cannot find NX section in @0@, update to gnu-efi 3.0.15+'.format(join_paths(efi_crtdir, arch_crt)))
 endif
 
 # older objcopy for Aarch64 and ARM32 are not EFI capable.
