@@ -18,7 +18,7 @@ SECTIONS
   } =0
   _text_vsize = _evtext - _text;
   _text_size = _etext - _text;
-  . = ALIGN(4096);
+  . = ALIGN(65536);
   _reloc = .;
   .reloc : {
     *(.reloc)
@@ -28,7 +28,7 @@ SECTIONS
   } =0
   _reloc_vsize = _evreloc - _reloc;
   _reloc_size = _ereloc - _reloc;
-  . = ALIGN(65536);
+  . = ALIGN(4096);
   _data = .;
   .dynamic  : { *(.dynamic) }
   . = ALIGN(4096);
