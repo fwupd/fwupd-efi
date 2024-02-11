@@ -431,7 +431,7 @@ fwup_add_update_capsule(FWUP_UPDATE_TABLE *update, EFI_CAPSULE_HEADER **capsule_
 	capsule = cap_out = (EFI_CAPSULE_HEADER *)fbuf;
 	if (cap_out->Flags == 0 &&
 	    CompareGuid(&update->info->guid, &ux_capsule_guid) != 0) {
-#if defined(__aarch64__)
+#if defined(__aarch64__) || (defined(__riscv) && __riscv_xlen == 64)
 		cap_out->Flags |= update->info->capsule_flags;
 #else
 		cap_out->Flags |= update->info->capsule_flags |

@@ -38,7 +38,7 @@ def _run_objcopy(args):
         args.outfile,
     ]
 
-    # older objcopy for Aarch64 and ARM32 are not EFI capable.
+    # older objcopy for Aarch64, ARM32 and RISC-V are not EFI capable.
     # Use "binary" instead, and add required symbols manually.
     if args.objcopy_manualsymbols:
         argv.extend(["-O", "binary"])
