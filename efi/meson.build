@@ -311,11 +311,16 @@ if efi_crtdir == join_paths(meson.current_build_dir(), 'crt0')
   fwupd_so_deps += [o_crt0]
 endif
 
+efi_cc_ldflags = []
+foreach flag : efi_ldflags
+  efi_cc_ldflags += ['-Wl,' + flag]
+endforeach
+
 so = custom_target('fwup.so',
                    input : o_files,
                    output : 'fwup.so',
-                   command : [ld, '-o', '@OUTPUT@'] +
-                             efi_ldflags + ['@INPUT@'] +
+                   command : [cc.cmd_array(), '-nostdlib', '-o', '@OUTPUT@'] +
+                             efi_cc_ldflags + ['@INPUT@'] +
                              ['-lefi', '-lgnuefi', libgcc_file_name],
                    depends: fwupd_so_deps)
 
