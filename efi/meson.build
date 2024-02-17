@@ -222,24 +222,13 @@ endif
 if objcopy_manualsymbols
   # older objcopy for Aarch64, ARM32 and RISC-V are not EFI capable.
   # Use 'binary' instead, and add required symbols manually.
-  efi_ldflags += ['--defsym=EFI_SUBSYSTEM=0xa']
+  if efi_crtdir != join_paths(meson.current_build_dir(), 'crt0')
+    # Using system so without crt0 generator
+    efi_ldflags += ['--defsym=EFI_SUBSYSTEM=0xa']
+  endif
   efi_format = ['-O', 'binary']
 else
   efi_format = ['--target=efi-app-@0@'.format(gnu_efi_arch)]
-endif
-
-# Section data
-if objcopy_manualsymbols
-  nr_sections = 4
-  if get_option('efi_sbat_distro_id') != ''
-    compile_args += ['-DUSING_SBAT']
-    nr_sections = nr_sections + 1
-  endif
-  if uswid.found()
-    compile_args += ['-DUSING_SBOM']
-    nr_sections = nr_sections + 1
-  endif
-  compile_args += ['-DNR_SECTIONS=@0@'.format(nr_sections)]
 endif
 
 libgcc_file_name = run_command(cc.cmd_array(), '-print-libgcc-file-name', check: true).stdout().strip()
