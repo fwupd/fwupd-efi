@@ -1,4 +1,4 @@
-arch_crt_source = 'crt0-efi-@0@.S'.format(gnu_efi_path_arch)
+arch_crt_source = 'crt0-efi-@0@.S'.format(gnu_efi_arch)
 
 crt0_compile_args = compile_args
 
