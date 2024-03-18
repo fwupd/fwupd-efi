@@ -23,6 +23,21 @@
   <update_contact>richard_at_hughsie.com</update_contact>
   <content_rating type="oars-1.0"/>
   <releases>
+    <release version="1.5" date="2024-03-18">
+      <description>
+        <p>This release fixes the following bugs:</p>
+        <ul>
+          <li>Add loongarch64 support</li>
+          <li>Add RISC-V support</li>
+          <li>Add SBOM section to linker and crt0 scripts</li>
+          <li>Align the data section to 64K on ARM64</li>
+          <li>Downgrade the .note.GNU-stack failure to a warning</li>
+          <li>Only use 4K pages on ARM32</li>
+          <li>Remove 64K gap on ARM32</li>
+          <li>Some UEFI 2.10 fixes</li>
+        </ul>
+      </description>
+    </release>
     <release version="1.4" date="2023-01-27">
       <description>
         <p>This release fixes the following bugs:</p>
