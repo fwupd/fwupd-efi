@@ -45,12 +45,6 @@ if efi_libdir == ''
   endif
 endif
 
-have_gnu_efi = gnu_efi_path_arch != '' and efi_libdir != ''
-
-if not have_gnu_efi
-  error('gnu-efi support requested, but headers were not found')
-endif
-
 # The name we need to look for on this arch and OS: elf_x86_64_fbsd_efi.lds
 lds_os = ''
 if host_cpu == 'x86_64' and host_machine.system() == 'freebsd'
@@ -95,11 +89,6 @@ else
         coff_header_in_crt0 = false
 endif
 
-# For NX compat, we must ensure we have .note.GNU-stack
-if run_command('grep', '-q', '.note.GNU-stack', join_paths(efi_crtdir, arch_crt), check: false).returncode() != 0
-  warning('Cannot find NX section in @0@, update to gnu-efi 3.0.15+'.format(join_paths(efi_crtdir, arch_crt)))
-endif
-
 # older objcopy for Aarch64, ARM32 and RISC-V are not EFI capable.
 # Use 'binary' instead, and add required symbols manually.
 if host_cpu == 'arm' or host_cpu == 'riscv64' or (host_cpu == 'aarch64' and (objcopy_version.version_compare ('< 2.38') or coff_header_in_crt0 or uswid.found()))
@@ -111,47 +100,6 @@ elif host_cpu == 'loongarch64' and (objcopy_version.version_compare ('< 2.41') o
 else
   objcopy_manualsymbols = false
   generate_binary_extra = []
-endif
-
-# is the system linker script new enough to know about SBAT?
-# i.e. gnu-efi with https://github.com/vathpela/gnu-efi/pull/14 has been installed
-if get_option('efi_sbat_distro_id') != ''
-  cmd = run_command('grep', '-q', 'sbat', join_paths(efi_ldsdir, arch_lds), check: false)
-  if cmd.returncode() != 0
-    warning('Cannot find SBAT section in @0@, using local copy'.format(join_paths(efi_ldsdir, arch_lds)))
-    efi_ldsdir = join_paths(meson.current_source_dir(), 'lds')
-    arch_lds = 'elf_@0@@1@_efi.lds'.format(gnu_efi_arch, lds_os)
-  endif
-endif
-
-# SBOM is never in system lds
-if uswid.found()
-  warning('Switching to local copy of linker script as using SBOM')
-  efi_ldsdir = join_paths(meson.current_source_dir(), 'lds')
-  arch_lds = 'elf_@0@@1@_efi.lds'.format(gnu_efi_arch, lds_os)
-endif
-
-# is the system crt0 for arm and aarch64 new enough to know about SBAT?
-if objcopy_manualsymbols
-  if get_option('efi_sbat_distro_id') != ''
-    cmd = run_command('grep', '-q', 'sbat', join_paths(efi_crtdir, arch_crt), check: false)
-    if cmd.returncode() != 0
-      warning('Cannot find SBAT section in @0@, using local copy'.format(join_paths(efi_crtdir, arch_crt)))
-      # The gnuefi libraries are still needed
-      efi_libdir = efi_crtdir
-      efi_crtdir = join_paths(meson.current_build_dir(), 'crt0')
-      efi_ldsdir = join_paths(meson.current_source_dir(), 'lds')
-    endif
-  endif
-endif
-
-# SBOM not in system crt0
-if objcopy_manualsymbols
-  if uswid.found()
-    warning('Switching to local copy of crt0 as using SBOM')
-    efi_crtdir = join_paths(meson.current_build_dir(), 'crt0')
-    efi_ldsdir = join_paths(meson.current_source_dir(), 'lds')
-  endif
 endif
 
 message('efi-libdir: "@0@"'.format(efi_libdir))
@@ -293,13 +241,6 @@ if uswid.found()
                           ] + uswid_cflags)
 endif
 
-fwupd_so_deps = []
-if efi_crtdir == join_paths(meson.current_build_dir(), 'crt0')
-  # A custom crt0 is needed
-  subdir('crt0')
-  fwupd_so_deps += [o_crt0]
-endif
-
 efi_cc_ldflags = []
 foreach flag : efi_ldflags
   efi_cc_ldflags += ['-Wl,' + flag]
@@ -310,8 +251,7 @@ so = custom_target('fwup.so',
                    output : 'fwup.so',
                    command : [cc.cmd_array(), '-nostdlib', '-o', '@OUTPUT@'] +
                              efi_cc_ldflags + ['@INPUT@'] +
-                             ['-lefi', '-lgnuefi', libgcc_file_name],
-                   depends: fwupd_so_deps)
+                             ['-lefi', '-lgnuefi', libgcc_file_name])
 
 app = custom_target(efi_name,
                     input : so,
