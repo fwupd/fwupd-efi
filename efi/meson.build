@@ -282,13 +282,6 @@ if uswid.found()
                           ] + uswid_cflags)
 endif
 
-fwupd_so_deps = []
-if efi_crtdir == join_paths(meson.current_build_dir(), 'crt0')
-  # A custom crt0 is needed
-  subdir('crt0')
-  fwupd_so_deps += [o_crt0]
-endif
-
 efi_cc_ldflags = []
 foreach flag : efi_ldflags
   efi_cc_ldflags += ['-Wl,' + flag]
@@ -299,8 +292,7 @@ so = custom_target('fwup.so',
                    output : 'fwup.so',
                    command : [cc.cmd_array(), '-nostdlib', '-o', '@OUTPUT@'] +
                              efi_cc_ldflags + ['@INPUT@'] +
-                             ['-lefi', '-lgnuefi', libgcc_file_name],
-                   depends: fwupd_so_deps)
+                             ['-lefi', '-lgnuefi', libgcc_file_name])
 
 app = custom_target(efi_name,
                     input : so,
