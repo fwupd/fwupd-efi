@@ -38,7 +38,7 @@ SECTIONS
    *(.got)
    *(.data*)
    *(.sdata)
-   
+
    /*
     * Note that these aren't the using the GNU "CONSTRUCTOR" output section
     * command, so they don't start with a size.  Because of p2align and the
@@ -89,6 +89,10 @@ SECTIONS
     *(.rela.got)
     *(.rela.dyn)
     *(.rela.stab)
+    *(.rela.init_array*)
+    *(.rela.fini_array*)
+    *(.rela.ctors*)
+    *(.rela.dtors*)
   }
   . = ALIGN(4096);
   .rela.plt : { *(.rela.plt) }
