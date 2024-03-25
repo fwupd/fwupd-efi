@@ -12,6 +12,8 @@ cc = meson.get_compiler('c')
 objcopy = find_program('objcopy')
 objcopy_version = run_command(objcopy, '--version', check: true).stdout().split('\n')[0].split(' ')[-1]
 
+# pkgconfig introduced in 3.0.18, allows compiling against older
+gnuefi = dependency('gnu-efi', required: false)
 prefix = get_option('prefix')
 libdir = join_paths(prefix, get_option('libdir'))
 libexecdir = join_paths(prefix, get_option('libexecdir'))

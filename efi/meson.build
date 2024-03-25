@@ -47,8 +47,8 @@ endif
 
 have_gnu_efi = gnu_efi_path_arch != '' and efi_libdir != ''
 
-if not have_gnu_efi
-  error('gnu-efi support requested, but headers were not found')
+if not have_gnu_efi and not gnuefi.found()
+  error('gnu-efi headers were not found')
 endif
 
 # The name we need to look for on this arch and OS: elf_x86_64_fbsd_efi.lds
@@ -93,11 +93,6 @@ if run_command('grep', '-q', 'coff_header', join_paths(efi_crtdir, arch_crt), ch
         coff_header_in_crt0 = true
 else
         coff_header_in_crt0 = false
-endif
-
-# For NX compat, we must ensure we have .note.GNU-stack
-if run_command('grep', '-q', '.note.GNU-stack', join_paths(efi_crtdir, arch_crt), check: false).returncode() != 0
-  warning('Cannot find NX section in @0@, update to gnu-efi 3.0.15+'.format(join_paths(efi_crtdir, arch_crt)))
 endif
 
 # older objcopy for Aarch64, ARM32 and RISC-V are not EFI capable.
