@@ -39,7 +39,7 @@ SECTIONS
    *(.data.*)
    *(.got.plt)
    *(.got)
-   
+
    /*
     * Note that these aren't the using the GNU "CONSTRUCTOR" output section
     * command, so they don't start with a size.  Because of p2align and the
@@ -66,7 +66,6 @@ SECTIONS
    *(SORT(.fini_array.*))
    *(.fini_array)
    __fini_array_end = .;
-
 
    /* the EFI loader doesn't seem to like a .bss section, so we stick
       it all into .data: */
@@ -96,6 +95,10 @@ SECTIONS
     *(.rel.got)
     *(.rel.dyn)
     *(.rel.stab)
+    *(.rel.init_array*)
+    *(.rel.fini_array*)
+    *(.rel.ctors*)
+    *(.rel.dtors*)
 
   }
   . = ALIGN(4096);
