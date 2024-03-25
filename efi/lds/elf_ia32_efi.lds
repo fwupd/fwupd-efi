@@ -31,7 +31,7 @@ SECTIONS
    *(.data)
    *(.data1)
    *(.data.*)
-   
+
    /*
     * Note that these aren't the using the GNU "CONSTRUCTOR" output section
     * command, so they don't start with a size.  Because of p2align and the
@@ -77,6 +77,10 @@ SECTIONS
     *(.rel.got)
     *(.rel.dyn)
     *(.rel.stab)
+    *(.rel.init_array*)
+    *(.rel.fini_array*)
+    *(.rel.ctors*)
+    *(.rel.dtors*)
     *(.data.rel.ro.local)
     *(.data.rel.local)
     *(.data.rel.ro)
