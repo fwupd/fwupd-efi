@@ -20,7 +20,6 @@ if uswid.found()
   )
 endif
 
-efi_ldsdir = get_option('efi-ldsdir')
 efi_incdir = get_option('efi-includedir')
 
 gnu_efi_path_arch = ''
@@ -51,42 +50,10 @@ if not have_gnu_efi and not gnuefi.found()
   error('gnu-efi headers were not found')
 endif
 
-# The name we need to look for on this arch and OS: elf_x86_64_fbsd_efi.lds
-lds_os = ''
-if host_cpu == 'x86_64' and host_machine.system() == 'freebsd'
-  lds_os = '_fbsd'
-endif
-
-arch_lds = 'efi.lds'
-arch_crt = 'crt0.o'
-if efi_ldsdir == ''
-  efi_ldsdir = join_paths(efi_libdir, 'gnuefi', gnu_efi_path_arch)
-  cmd = run_command('test', '-f', join_paths(efi_ldsdir, arch_lds), check: false)
-  if cmd.returncode() != 0
-    arch_lds = 'elf_@0@@1@_efi.lds'.format(gnu_efi_path_arch, lds_os)
-    arch_crt = 'crt0-efi-@0@.o'.format(gnu_efi_path_arch)
-    efi_ldsdir = join_paths(efi_libdir, 'gnuefi')
-    cmd = run_command('test', '-f', join_paths(efi_ldsdir, arch_lds), check: false)
-  endif
-  if cmd.returncode() != 0
-    efi_ldsdir = efi_libdir
-    cmd = run_command('test', '-f', join_paths(efi_ldsdir, arch_lds), check: false)
-    if cmd.returncode() != 0
-      error('Cannot find @0@'.format(arch_lds))
-    endif
-  endif
-else
-  cmd = run_command('test', '-f', join_paths(efi_ldsdir, arch_lds), check: false)
-  if cmd.returncode() != 0
-    arch_lds = 'elf_@0@@1@_efi.lds'.format(gnu_efi_path_arch, lds_os)
-    arch_crt = 'crt0-efi-@0@.o'.format(gnu_efi_path_arch)
-    cmd = run_command('test', '-f', join_paths(efi_ldsdir, arch_lds), check: false)
-  endif
-  if cmd.returncode() != 0
-    error('Cannot find @0@'.format(arch_lds))
-  endif
-endif
-efi_crtdir = efi_ldsdir
+efi_ldsdir = join_paths(meson.current_source_dir(), 'lds')
+efi_crtdir = join_paths(meson.current_build_dir(), 'crt0')
+arch_lds = 'elf_@0@_efi.lds'.format(gnu_efi_arch)
+arch_crt = 'crt0-efi-@0@.o'.format(gnu_efi_path_arch)
 
 # If using objcopy, crt0 must not include the PE/COFF header
 if run_command('grep', '-q', 'coff_header', join_paths(efi_crtdir, arch_crt), check: false).returncode() == 0
@@ -108,50 +75,7 @@ else
   generate_binary_extra = []
 endif
 
-# is the system linker script new enough to know about SBAT?
-# i.e. gnu-efi with https://github.com/vathpela/gnu-efi/pull/14 has been installed
-if get_option('efi_sbat_distro_id') != ''
-  cmd = run_command('grep', '-q', 'sbat', join_paths(efi_ldsdir, arch_lds), check: false)
-  if cmd.returncode() != 0
-    warning('Cannot find SBAT section in @0@, using local copy'.format(join_paths(efi_ldsdir, arch_lds)))
-    efi_ldsdir = join_paths(meson.current_source_dir(), 'lds')
-    arch_lds = 'elf_@0@@1@_efi.lds'.format(gnu_efi_arch, lds_os)
-  endif
-endif
-
-# SBOM is never in system lds
-if uswid.found()
-  warning('Switching to local copy of linker script as using SBOM')
-  efi_ldsdir = join_paths(meson.current_source_dir(), 'lds')
-  arch_lds = 'elf_@0@@1@_efi.lds'.format(gnu_efi_arch, lds_os)
-endif
-
-# is the system crt0 for arm and aarch64 new enough to know about SBAT?
-if objcopy_manualsymbols
-  if get_option('efi_sbat_distro_id') != ''
-    cmd = run_command('grep', '-q', 'sbat', join_paths(efi_crtdir, arch_crt), check: false)
-    if cmd.returncode() != 0
-      warning('Cannot find SBAT section in @0@, using local copy'.format(join_paths(efi_crtdir, arch_crt)))
-      # The gnuefi libraries are still needed
-      efi_libdir = efi_crtdir
-      efi_crtdir = join_paths(meson.current_build_dir(), 'crt0')
-      efi_ldsdir = join_paths(meson.current_source_dir(), 'lds')
-    endif
-  endif
-endif
-
-# SBOM not in system crt0
-if objcopy_manualsymbols
-  if uswid.found()
-    warning('Switching to local copy of crt0 as using SBOM')
-    efi_crtdir = join_paths(meson.current_build_dir(), 'crt0')
-    efi_ldsdir = join_paths(meson.current_source_dir(), 'lds')
-  endif
-endif
-
 message('efi-libdir: "@0@"'.format(efi_libdir))
-message('efi-ldsdir: "@0@"'.format(efi_ldsdir))
-message('efi-crtdir: "@0@"'.format(efi_crtdir))
 message('efi-includedir: "@0@"'.format(efi_incdir))
 
 debugdir = join_paths (libdir, 'debug')
@@ -288,12 +212,7 @@ if uswid.found()
                           ] + uswid_cflags)
 endif
 
-fwupd_so_deps = []
-if efi_crtdir == join_paths(meson.current_build_dir(), 'crt0')
-  # A custom crt0 is needed
-  subdir('crt0')
-  fwupd_so_deps += [o_crt0]
-endif
+subdir('crt0')
 
 efi_cc_ldflags = []
 foreach flag : efi_ldflags
@@ -306,7 +225,7 @@ so = custom_target('fwup.so',
                    command : [cc.cmd_array(), '-nostdlib', '-o', '@OUTPUT@'] +
                              efi_cc_ldflags + ['@INPUT@'] +
                              ['-lefi', '-lgnuefi', libgcc_file_name],
-                   depends: fwupd_so_deps)
+                   depends: o_crt0)
 
 app = custom_target(efi_name,
                     input : so,
