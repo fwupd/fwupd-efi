@@ -151,7 +151,7 @@ endif
 
 # Check aligned lds and crt0 on ARM64 this breaks otherwise
 if host_cpu == 'aarch64' and not objcopy_manualsymbols
-  if efi_ldsdir = join_paths(meson.current_source_dir(), 'lds')
+  if efi_ldsdir == join_paths(meson.current_source_dir(), 'lds')
       arch_lds = 'elf_@0@@1@_efi_system.lds'.format(gnu_efi_arch, lds_os)
   endif
 endif
