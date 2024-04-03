@@ -45,12 +45,6 @@ if efi_libdir == ''
   endif
 endif
 
-have_gnu_efi = gnu_efi_path_arch != '' and efi_libdir != ''
-
-if not have_gnu_efi and not gnuefi.found()
-  error('gnu-efi headers were not found')
-endif
-
 # The name we need to look for on this arch and OS: elf_x86_64_fbsd_efi.lds
 lds_os = ''
 if host_cpu == 'x86_64' and host_machine.system() == 'freebsd'
