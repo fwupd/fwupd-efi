@@ -1,5 +1,7 @@
 # EFI executable for fwupd
 
+[![OpenSSF Scorecard](https://api.securityscorecards.dev/projects/github.com/fwupd/fwupd-efi/badge)](https://securityscorecards.dev/viewer/?uri=github.com/fwupd/fwupd-efi)
+
 This repository contains the source used for the fwupd project to generate a
 UEFI binary for installing updates using the `UpdateCapsule` runtime service.
 
