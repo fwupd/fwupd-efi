@@ -7,16 +7,16 @@ Summary:   Firmware update EFI binaries
 Name:      fwupd-efi
 Version:   #VERSION#
 Release:   0.#BUILD#%{?alphatag}%{?dist}
-License:   LGPLv2+
+License:   LGPL-2.1-or-later
 URL:       https://github.com/fwupd/fwupd-efi
-Source0:   http://people.freedesktop.org/~hughsient/releases/%{name}-%{version}.tar.xz
+Source0:   https://github.com/fwupd/fwupd-efi/releases/download/%{version}/%{name}-%{version}.tar.xz
 
 # these are the only architectures supporting UEFI UpdateCapsule
 ExclusiveArch: x86_64 aarch64
 
 BuildRequires: gcc
 BuildRequires: meson
-BuildRequires: gnu-efi-devel
+BuildRequires: gnu-efi-devel >= 3.0.18
 BuildRequires: pesign
 BuildRequires: python3-pefile
 
