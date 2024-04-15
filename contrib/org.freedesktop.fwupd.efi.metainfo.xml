@@ -21,8 +21,21 @@
   <url type="bugtracker">https://github.com/fwupd/fwupd-efi/issues</url>
   <url type="homepage">https://fwupd.org/</url>
   <update_contact>richard_at_hughsie.com</update_contact>
+  <developer_name>The fwupd authors</developer_name>
+  <developer id="org.fwupd">
+    <name translate="no">The fwupd authors</name>
+  </developer>
   <content_rating type="oars-1.0"/>
   <releases>
+    <release version="1.6" date="2024-04-15">
+      <description>
+        <p>This release fixes the following bugs:</p>
+        <ul>
+          <li>Require gnu-efi 3.0.18 or later</li>
+          <li>Ship an objcopy capable LDS for ARM64</li>
+        </ul>
+      </description>
+    </release>
     <release version="1.5" date="2024-03-18">
       <description>
         <p>This release fixes the following bugs:</p>
