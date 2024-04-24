@@ -206,6 +206,7 @@ efi_ldflags = ['-T',
                '-Bsymbolic',
                '-nostdlib',
                '-znocombreloc',
+               '-znorelro',
                '-L', efi_crtdir,
                '-L', efi_libdir,
                join_paths(efi_crtdir, arch_crt)]
