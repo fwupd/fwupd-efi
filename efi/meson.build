@@ -1,5 +1,5 @@
-generate_sbat = find_program('generate_sbat.py', native: true)
-generate_binary = find_program('generate_binary.py', native: true)
+generate_sbat = [python3, files('generate_sbat.py')]
+generate_binary = [python3, files('generate_binary.py')]
 
 # get source version, falling back
 git = find_program('git', required : false)
