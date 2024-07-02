@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!/usr/bin/env python3
 #
 # Copyright (C) 2021 Javier Martinez Canillas <javierm@redhat.com>
 # Copyright (C) 2021 Richard Hughes <richard@hughsie.com>
