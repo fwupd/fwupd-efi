@@ -17,7 +17,7 @@ prefix = get_option('prefix')
 libdir = join_paths(prefix, get_option('libdir'))
 libexecdir = join_paths(prefix, get_option('libexecdir'))
 
-genpeimg = find_program ('genpeimg', required: false)
+genpeimg = find_program ('genpeimg', required: get_option('genpeimg'))
 
 efi_app_location = join_paths(libexecdir, 'fwupd', 'efi')
 host_cpu = host_machine.cpu_family()
