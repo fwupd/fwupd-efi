@@ -37,7 +37,8 @@ the EFI binary that is used for updating using UpdateCapsule.
     -Defi_sbat_distro_summary="The Fedora Project" \
     -Defi_sbat_distro_pkgname="%{name}" \
     -Defi_sbat_distro_version="%{version}-%{release}" \
-    -Defi_sbat_distro_url="https://src.fedoraproject.org/rpms/%{name}"
+    -Defi_sbat_distro_url="https://src.fedoraproject.org/rpms/%{name}" \
+    -Dgenpeimg=disabled
 
 %meson_build
 
