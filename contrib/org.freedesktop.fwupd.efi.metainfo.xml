@@ -27,6 +27,14 @@
   </developer>
   <content_rating type="oars-1.0"/>
   <releases>
+    <release version="1.7" date="2024-09-20">
+      <description>
+        <p>This release fixes the following bugs:</p>
+        <ul>
+          <li>Fix compilation with GNU-EFI 4.0</li>
+        </ul>
+      </description>
+    </release>
     <release version="1.6" date="2024-04-15">
       <description>
         <p>This release fixes the following bugs:</p>
