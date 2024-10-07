@@ -15,6 +15,7 @@ objcopy_version = run_command(objcopy, '--version', check: true).stdout().split(
 gnuefi = dependency('gnu-efi', version: '>= 3.0.18')
 prefix = get_option('prefix')
 libdir = join_paths(prefix, get_option('libdir'))
+includedir = join_paths(prefix, get_option('includedir'))
 libexecdir = join_paths(prefix, get_option('libexecdir'))
 
 genpeimg = find_program ('genpeimg', required: get_option('genpeimg'))

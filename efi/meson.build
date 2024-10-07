@@ -23,6 +23,10 @@ endif
 efi_ldsdir = get_option('efi-ldsdir')
 efi_incdir = get_option('efi-includedir')
 
+if efi_incdir == ''
+  efi_incdir = join_paths(includedir, 'efi')
+endif
+
 gnu_efi_path_arch = ''
 foreach name : [gnu_efi_arch, EFI_MACHINE_TYPE_NAME]
   if (gnu_efi_path_arch == '' and name != '' and
@@ -41,7 +45,7 @@ if efi_libdir == ''
   multi = run_command(cc.cmd_array(), '-print-multi-os-directory', check: true).stdout().strip()
   efi_libdir = join_paths('/usr/lib/', multi)
   if not fs.is_dir(join_paths(efi_libdir, 'gnuefi'))
-    efi_libdir = '/usr/lib'
+    efi_libdir = libdir
   endif
 endif
 
@@ -91,10 +95,16 @@ endif
 
 # older objcopy for Aarch64, ARM32 and RISC-V are not EFI capable.
 # Use 'binary' instead, and add required symbols manually.
-if host_cpu == 'arm' or host_cpu == 'riscv64' or (host_cpu == 'aarch64' and (objcopy_version.version_compare ('< 2.38') or coff_header_in_crt0 or uswid.found()))
+if host_cpu == 'arm'
+  objcopy_manualsymbols = true
+  generate_binary_extra = ['--objcopy-manualsymbols']
+elif host_cpu == 'aarch64' and (objcopy_version.version_compare ('< 2.38') or coff_header_in_crt0 or uswid.found())
   objcopy_manualsymbols = true
   generate_binary_extra = ['--objcopy-manualsymbols']
 elif host_cpu == 'loongarch64' and (objcopy_version.version_compare ('< 2.41') or coff_header_in_crt0)
+  objcopy_manualsymbols = true
+  generate_binary_extra = ['--objcopy-manualsymbols']
+elif host_cpu == 'riscv64' and (objcopy_version.version_compare ('< 2.42') or coff_header_in_crt0 or uswid.found())
   objcopy_manualsymbols = true
   generate_binary_extra = ['--objcopy-manualsymbols']
 else
@@ -143,8 +153,8 @@ if objcopy_manualsymbols
   endif
 endif
 
-# Check aligned lds and crt0 on ARM64 this breaks otherwise
-if host_cpu == 'aarch64' and not objcopy_manualsymbols
+# Check aligned lds and crt0 on ARM64/RISCV64 this breaks otherwise
+if (host_cpu == 'aarch64' or host_cpu == 'riscv64') and not objcopy_manualsymbols
   if efi_ldsdir == join_paths(meson.current_source_dir(), 'lds')
       arch_lds = 'elf_@0@@1@_efi_system.lds'.format(gnu_efi_arch, lds_os)
   endif
