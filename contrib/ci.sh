@@ -11,7 +11,7 @@ if [ "$OS" = "fedora" ]; then
     sudo dnf install -y \
         https://kojipkgs.fedoraproject.org//packages/gnu-efi/3.0.18/3.fc40/x86_64/gnu-efi-3.0.18-3.fc40.x86_64.rpm \
         https://kojipkgs.fedoraproject.org//packages/gnu-efi/3.0.18/3.fc40/x86_64/gnu-efi-devel-3.0.18-3.fc40.x86_64.rpm
-    meson build
+    meson build --prefix=/usr -Defi-libdir=/usr/lib
     VERSION=`meson introspect build --projectinfo | jq -r .version`
     RPMVERSION=${VERSION//-/.}
     sed "s,#VERSION#,$RPMVERSION,;
@@ -43,6 +43,6 @@ elif [ "$OS" = "debian-x86_64" ] || [ "$OS" = "debian-i386" ]; then
     debuild --no-lintian --preserve-envvar CI --preserve-envvar CC \
         --preserve-envvar QUBES_OPTION
 else
-    meson build
+    meson build --prefix=/usr
     ninja -C build
 fi
