@@ -23,6 +23,10 @@ endif
 efi_ldsdir = get_option('efi-ldsdir')
 efi_incdir = get_option('efi-includedir')
 
+if efi_incdir == ''
+  efi_incdir = join_paths(gnuefi.get_variable(pkgconfig: 'includedir'), 'efi')
+endif
+
 gnu_efi_path_arch = ''
 foreach name : [gnu_efi_arch, EFI_MACHINE_TYPE_NAME]
   if (gnu_efi_path_arch == '' and name != '' and
@@ -37,12 +41,7 @@ endif
 
 efi_libdir = get_option('efi-libdir')
 if efi_libdir == ''
-  fs = import('fs')
-  multi = run_command(cc.cmd_array(), '-print-multi-os-directory', check: true).stdout().strip()
-  efi_libdir = join_paths('/usr/lib/', multi)
-  if not fs.is_dir(join_paths(efi_libdir, 'gnuefi'))
-    efi_libdir = '/usr/lib'
-  endif
+  efi_libdir = gnuefi.get_variable(pkgconfig: 'libdir')
 endif
 
 # The name we need to look for on this arch and OS: elf_x86_64_fbsd_efi.lds
@@ -51,34 +50,15 @@ if host_cpu == 'x86_64' and host_machine.system() == 'freebsd'
   lds_os = '_fbsd'
 endif
 
-arch_lds = 'efi.lds'
-arch_crt = 'crt0.o'
+
 if efi_ldsdir == ''
-  efi_ldsdir = join_paths(efi_libdir, 'gnuefi', gnu_efi_path_arch)
-  cmd = run_command('test', '-f', join_paths(efi_ldsdir, arch_lds), check: false)
-  if cmd.returncode() != 0
-    arch_lds = 'elf_@0@@1@_efi.lds'.format(gnu_efi_path_arch, lds_os)
-    arch_crt = 'crt0-efi-@0@.o'.format(gnu_efi_path_arch)
-    efi_ldsdir = join_paths(efi_libdir, 'gnuefi')
-    cmd = run_command('test', '-f', join_paths(efi_ldsdir, arch_lds), check: false)
-  endif
-  if cmd.returncode() != 0
     efi_ldsdir = efi_libdir
-    cmd = run_command('test', '-f', join_paths(efi_ldsdir, arch_lds), check: false)
-    if cmd.returncode() != 0
-      error('Cannot find @0@'.format(arch_lds))
-    endif
-  endif
-else
-  cmd = run_command('test', '-f', join_paths(efi_ldsdir, arch_lds), check: false)
-  if cmd.returncode() != 0
-    arch_lds = 'elf_@0@@1@_efi.lds'.format(gnu_efi_path_arch, lds_os)
-    arch_crt = 'crt0-efi-@0@.o'.format(gnu_efi_path_arch)
-    cmd = run_command('test', '-f', join_paths(efi_ldsdir, arch_lds), check: false)
-  endif
-  if cmd.returncode() != 0
-    error('Cannot find @0@'.format(arch_lds))
-  endif
+endif
+arch_lds = 'elf_@0@@1@_efi.lds'.format(gnu_efi_path_arch, lds_os)
+arch_crt = 'crt0-efi-@0@.o'.format(gnu_efi_path_arch)
+cmd = run_command('test', '-f', join_paths(efi_ldsdir, arch_lds), check: false)
+if cmd.returncode() != 0
+  error('Cannot find @0@'.format(arch_lds))
 endif
 efi_crtdir = efi_ldsdir
 
