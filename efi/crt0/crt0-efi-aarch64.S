@@ -1,5 +1,6 @@
+
 /*
- * crt0-efi-aarch64.S - PE/COFF header for AArch64 EFI applications
+ * crt0-efi-aarch64-local.S - PE/COFF header for AArch64 EFI applications (without suitable objcopy)
  *
  * Copyright (C) 2014 Linaro Ltd. <ard.biesheuvel@linaro.org>
  *
@@ -108,6 +109,17 @@ section_table:
 	.2byte	0		// NumberOfLineNumbers  (0 for executables)
 	.4byte	0x60000020	// Characteristics (section flags)
 
+	.ascii	".data\0\0\0"
+	.4byte	_data_vsize - ImageBase			// VirtualSize
+	.4byte	_data - ImageBase			// VirtualAddress
+	.4byte	_data_size - ImageBase			// SizeOfRawData
+	.4byte	_data - ImageBase			// PointerToRawData
+	.4byte	0			// PointerToRelocations
+	.4byte	0			// PointerToLineNumbers
+	.2byte	0			// NumberOfRelocations
+	.2byte	0			// NumberOfLineNumbers
+	.4byte	0xC0000040		// Characteristics (section flags)
+
 	/*
 	 * The EFI application loader requires a relocation section
 	 * because EFI applications must be relocatable.  This is a
@@ -124,17 +136,6 @@ section_table:
 	.2byte	0			// NumberOfLineNumbers
 	.4byte	0x42000040		// Characteristics (section flags)
 
-	.ascii	".data\0\0\0"
-	.4byte	_data_vsize - ImageBase			// VirtualSize
-	.4byte	_data - ImageBase			// VirtualAddress
-	.4byte	_data_size - ImageBase			// SizeOfRawData
-	.4byte	_data - ImageBase			// PointerToRawData
-	.4byte	0			// PointerToRelocations
-	.4byte	0			// PointerToLineNumbers
-	.2byte	0			// NumberOfRelocations
-	.2byte	0			// NumberOfLineNumbers
-	.4byte	0xC0000040		// Characteristics (section flags)
-
 	.ascii	".rodata\0"
 	.4byte	_rodata_vsize - ImageBase			// VirtualSize
 	.4byte	_rodata - ImageBase			// VirtualAddress
@@ -145,7 +146,7 @@ section_table:
 	.2byte	0			// NumberOfRelocations
 	.2byte	0			// NumberOfLineNumbers
 	.4byte	0x40000040		// Characteristics (section flags)
-	
+
 #ifdef USING_SBAT
 	.ascii	".sbat\0\0\0"
 	.4byte	_sbat_vsize - ImageBase		// VirtualSize
@@ -173,6 +174,7 @@ section_table:
 	.4byte	0x40000040	// Characteristics (section flags)
 #endif
 
+
 	.text
 	.globl _start
 	.type _start,%function
@@ -187,23 +189,24 @@ _start:
 	adrp		x1, _DYNAMIC
 	add		x1, x1, #:lo12:_DYNAMIC
 	bl		_relocate
-	cbnz		x0, 0f
+	cbnz		x0, .L_exit
 
 	ldp		x0, x1, [sp, #16]
-	bl		efi_main
+	bl		_entry
 
-0:	ldp		x29, x30, [sp], #32
+.L_exit:
+	ldp		x29, x30, [sp], #32
 	ret
-	
-// hand-craft a dummy .reloc section so EFI knows it's a relocatable executable:
+
+	// hand-craft a dummy .reloc section so EFI knows it's a relocatable executable:
  
  	.data
-dummy:	.4byte	0
+dummy0:	.4byte	0
+dummy1:	.4byte	0
 
 #define IMAGE_REL_ABSOLUTE	0
- 	.section .reloc, "a"
-label1:
-	.4byte	dummy-label1				// Page RVA
+ 	.section .reloc, "a", %progbits
+	.4byte	dummy1 - dummy0				// Page RVA
 	.4byte	12					// Block Size (2*4+2*2), must be aligned by 32 Bits
 	.2byte	(IMAGE_REL_ABSOLUTE<<12) +  0		// reloc for dummy
 	.2byte	(IMAGE_REL_ABSOLUTE<<12) +  0		// reloc for dummy

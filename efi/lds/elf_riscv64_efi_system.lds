@@ -26,11 +26,6 @@ SECTIONS
   _etext = .;
   _text_size = _etext - _text;
   . = ALIGN(65536);
-  .reloc :
-  {
-    KEEP (*(.reloc))
-  }
-  . = ALIGN(4096);
   _DYNAMIC = .;
   .dynamic  : { *(.dynamic) }
   . = ALIGN(4096);
@@ -85,6 +80,11 @@ SECTIONS
 
    _bss_end = .;
   }
+  . = ALIGN(4096);
+  .reloc :
+  {
+    KEEP (*(.reloc))
+  }
 
   . = ALIGN(4096);
   .rela :
@@ -124,13 +124,7 @@ SECTIONS
   _sbat_size = _epsbat - _sbat;
   _sbat_vsize = _esbat - _sbat;
   . = ALIGN(4096);
-  .sbom :
-  {
-    _sbom = .;
-    *(.sbom)
-    _epsbom = .;
-  }
-  _sbom_size = _epsbom - _sbom;
+  .sbom : { *(.sbom) }
   . = ALIGN(512);
   _edata = .;
   _data_size = _edata - _data;

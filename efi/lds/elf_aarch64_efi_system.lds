@@ -20,29 +20,20 @@ SECTIONS
     *(.gnu.linkonce.t.*)
     *(.plt)
     . = ALIGN(16);
-    _etext = .;
   }
+  _etext = .;
   _text_size = _etext - _text;
   . = ALIGN(65536);
-  _reloc = .;
-  .reloc : {
-    *(.reloc)
-    _ereloc = .;
-  }
-  _reloc_size = _ereloc - _reloc;
-  . = ALIGN(4096);
-  _data = .;
-  .dynamic  : { *(.dynamic) }
-  . = ALIGN(4096);
   .data :
   {
+   _data = .;
    *(.sdata)
    *(.data)
    *(.data1)
    *(.data.*)
    *(.got.plt)
    *(.got)
-   
+
    /*
     * Note that these aren't the using the GNU "CONSTRUCTOR" output section
     * command, so they don't start with a size.  Because of p2align and the
@@ -77,17 +68,22 @@ SECTIONS
    *(.sbss)
    *(.scommon)
    *(.dynbss)
-   *(.bss)
-   *(.bss.*)
+   *(.bss*)
    *(COMMON)
+   *(.rel.local)
    . = ALIGN(16);
-   _bss_end = .;
-   _edata = .;
-  }
-  _data_size = _edata - _data;
 
+   _bss_end = .;
+  }
   . = ALIGN(4096);
-  _rodata = .;
+  .reloc :
+  {
+    KEEP (*(.reloc))
+  }
+  . = ALIGN(4096);
+  _DYNAMIC = .;
+  .dynamic  : { *(.dynamic) }
+  . = ALIGN(4096);
   .rela :
   {
     *(.rela.text*)
@@ -104,11 +100,7 @@ SECTIONS
   . = ALIGN(4096);
   .rela.plt : { *(.rela.plt) }
   . = ALIGN(4096);
-  .rodata : {
-    *(.rodata*)
-    _erodata = .;
-  }
-  _rodata_size = _erodata - _rodata;
+  .rodata : { *(.rodata*) }
   /*
    * Note that _sbat must be the beginning of the data, and _esbat must be the
    * end and must be before any section padding.  The sbat self-check uses
@@ -129,15 +121,10 @@ SECTIONS
   _sbat_size = _epsbat - _sbat;
   _sbat_vsize = _esbat - _sbat;
   . = ALIGN(4096);
-  .sbom :
-  {
-    _sbom = .;
-    *(.sbom)
-    _epsbom = .;
-  }
-  _sbom_size = _epsbom - _sbom;
-  _image_end = .;
-  _alldata_size = _image_end - _reloc;
+  .sbom : { *(.sbom) }
+  . = ALIGN(512);
+  _edata = .;
+  _data_size = _edata - _data;
 
   . = ALIGN(4096);
   .dynsym   : { *(.dynsym) }
@@ -145,7 +132,7 @@ SECTIONS
   .dynstr   : { *(.dynstr) }
   . = ALIGN(4096);
   .note.gnu.build-id : { *(.note.gnu.build-id) }
-  /DISCARD/ :
+  .ignored.reloc :
   {
     *(.rela.reloc)
     *(.note.GNU-stack)
