@@ -8,9 +8,6 @@ rm -rf build/
 git config --global safe.directory "*"
 
 if [ "$OS" = "fedora" ]; then
-    sudo dnf install -y \
-        https://kojipkgs.fedoraproject.org//packages/gnu-efi/3.0.18/3.fc40/x86_64/gnu-efi-3.0.18-3.fc40.x86_64.rpm \
-        https://kojipkgs.fedoraproject.org//packages/gnu-efi/3.0.18/3.fc40/x86_64/gnu-efi-devel-3.0.18-3.fc40.x86_64.rpm
     meson build
     VERSION=`meson introspect build --projectinfo | jq -r .version`
     RPMVERSION=${VERSION//-/.}
