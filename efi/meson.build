@@ -23,6 +23,10 @@ endif
 efi_ldsdir = get_option('efi-ldsdir')
 efi_incdir = get_option('efi-includedir')
 
+if efi_incdir == ''
+  efi_incdir = join_paths(gnuefi.get_variable(pkgconfig: 'includedir'), 'efi')
+endif
+
 gnu_efi_path_arch = ''
 foreach name : [gnu_efi_arch, EFI_MACHINE_TYPE_NAME]
   if (gnu_efi_path_arch == '' and name != '' and
@@ -37,12 +41,7 @@ endif
 
 efi_libdir = get_option('efi-libdir')
 if efi_libdir == ''
-  fs = import('fs')
-  multi = run_command(cc.cmd_array(), '-print-multi-os-directory', check: true).stdout().strip()
-  efi_libdir = join_paths('/usr/lib/', multi)
-  if not fs.is_dir(join_paths(efi_libdir, 'gnuefi'))
-    efi_libdir = '/usr/lib'
-  endif
+  efi_libdir = gnuefi.get_variable(pkgconfig: 'libdir')
 endif
 
 # The name we need to look for on this arch and OS: elf_x86_64_fbsd_efi.lds
@@ -51,34 +50,15 @@ if host_cpu == 'x86_64' and host_machine.system() == 'freebsd'
   lds_os = '_fbsd'
 endif
 
-arch_lds = 'efi.lds'
-arch_crt = 'crt0.o'
+
 if efi_ldsdir == ''
-  efi_ldsdir = join_paths(efi_libdir, 'gnuefi', gnu_efi_path_arch)
-  cmd = run_command('test', '-f', join_paths(efi_ldsdir, arch_lds), check: false)
-  if cmd.returncode() != 0
-    arch_lds = 'elf_@0@@1@_efi.lds'.format(gnu_efi_path_arch, lds_os)
-    arch_crt = 'crt0-efi-@0@.o'.format(gnu_efi_path_arch)
-    efi_ldsdir = join_paths(efi_libdir, 'gnuefi')
-    cmd = run_command('test', '-f', join_paths(efi_ldsdir, arch_lds), check: false)
-  endif
-  if cmd.returncode() != 0
     efi_ldsdir = efi_libdir
-    cmd = run_command('test', '-f', join_paths(efi_ldsdir, arch_lds), check: false)
-    if cmd.returncode() != 0
-      error('Cannot find @0@'.format(arch_lds))
-    endif
-  endif
-else
-  cmd = run_command('test', '-f', join_paths(efi_ldsdir, arch_lds), check: false)
-  if cmd.returncode() != 0
-    arch_lds = 'elf_@0@@1@_efi.lds'.format(gnu_efi_path_arch, lds_os)
-    arch_crt = 'crt0-efi-@0@.o'.format(gnu_efi_path_arch)
-    cmd = run_command('test', '-f', join_paths(efi_ldsdir, arch_lds), check: false)
-  endif
-  if cmd.returncode() != 0
-    error('Cannot find @0@'.format(arch_lds))
-  endif
+endif
+arch_lds = 'elf_@0@@1@_efi.lds'.format(gnu_efi_path_arch, lds_os)
+arch_crt = 'crt0-efi-@0@.o'.format(gnu_efi_path_arch)
+cmd = run_command('test', '-f', join_paths(efi_ldsdir, arch_lds), check: false)
+if cmd.returncode() != 0
+  error('Cannot find @0@'.format(arch_lds))
 endif
 efi_crtdir = efi_ldsdir
 
@@ -91,10 +71,16 @@ endif
 
 # older objcopy for Aarch64, ARM32 and RISC-V are not EFI capable.
 # Use 'binary' instead, and add required symbols manually.
-if host_cpu == 'arm' or host_cpu == 'riscv64' or (host_cpu == 'aarch64' and (objcopy_version.version_compare ('< 2.38') or coff_header_in_crt0 or uswid.found()))
+if host_cpu == 'arm'
+  objcopy_manualsymbols = true
+  generate_binary_extra = ['--objcopy-manualsymbols']
+elif host_cpu == 'aarch64' and (objcopy_version.version_compare ('< 2.38') or coff_header_in_crt0 or uswid.found())
   objcopy_manualsymbols = true
   generate_binary_extra = ['--objcopy-manualsymbols']
 elif host_cpu == 'loongarch64' and (objcopy_version.version_compare ('< 2.41') or coff_header_in_crt0)
+  objcopy_manualsymbols = true
+  generate_binary_extra = ['--objcopy-manualsymbols']
+elif host_cpu == 'riscv64' and (objcopy_version.version_compare ('< 2.42') or coff_header_in_crt0 or uswid.found())
   objcopy_manualsymbols = true
   generate_binary_extra = ['--objcopy-manualsymbols']
 else
@@ -143,8 +129,8 @@ if objcopy_manualsymbols
   endif
 endif
 
-# Check aligned lds and crt0 on ARM64 this breaks otherwise
-if host_cpu == 'aarch64' and not objcopy_manualsymbols
+# Check aligned lds and crt0 on ARM64/RISCV64 this breaks otherwise
+if (host_cpu == 'aarch64' or host_cpu == 'riscv64') and not objcopy_manualsymbols
   if efi_ldsdir == join_paths(meson.current_source_dir(), 'lds')
       arch_lds = 'elf_@0@@1@_efi_system.lds'.format(gnu_efi_arch, lds_os)
   endif
