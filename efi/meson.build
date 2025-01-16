@@ -325,6 +325,7 @@ app = custom_target(efi_name,
                       '--arch', gnu_efi_arch,
                       '--os', host_machine.system(),
                       '--objcopy', objcopy,
+                      '--pkgnote', get_option('pkgnote'),
                       '--genpeimg', genpeimg.found() ? genpeimg : ''
                     ]
                     + generate_binary_extra,

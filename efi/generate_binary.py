@@ -10,6 +10,8 @@
 import subprocess
 import sys
 import argparse
+import tempfile
+import json
 
 
 def _run_objcopy(args):
@@ -64,6 +66,33 @@ def _run_genpeimg(args):
         sys.exit(1)
 
 
+def _run_pkgnote(args):
+
+    if not args.pkgnote:
+        return
+
+    # verify this is actually JSON
+    try:
+        _ = json.loads(args.pkgnote)
+    except json.JSONDecodeError as e:
+        print(f"Not valid JSON: {e}")
+        sys.exit(1)
+
+    # use `objdump -s -j .pkgnote` to verify
+    with tempfile.NamedTemporaryFile() as sfd:
+        sfd.write(args.pkgnote.encode() + b"\0")
+        sfd.flush()
+        argv = [
+            args.objcopy,
+            "--add-section",
+            ".pkgnote={}".format(sfd.name),
+            "--set-section-flags",
+            ".sbat=contents,alloc,load,readonly,data",
+            args.outfile,
+        ]
+        subprocess.run(argv, check=True)
+
+
 def _add_nx_pefile(args):
     # unnecessary if we have genpeimg
     if args.genpeimg:
@@ -88,6 +117,7 @@ if __name__ == "__main__":
         "--objcopy", default="objcopy", help="Binary file to use for objcopy"
     )
     parser.add_argument("--genpeimg", help="Binary file to use for genpeimg")
+    parser.add_argument("--pkgnote", help="Package metadata in JSON format")
     parser.add_argument("--arch", default="x86_64", help="EFI architecture")
     parser.add_argument("--os", help="OS type")
     parser.add_argument(
@@ -99,6 +129,7 @@ if __name__ == "__main__":
     parser.add_argument("outfile", help="Output file")
     _args = parser.parse_args()
     _run_objcopy(_args)
+    _run_pkgnote(_args)
     _run_genpeimg(_args)
     _add_nx_pefile(_args)
 
