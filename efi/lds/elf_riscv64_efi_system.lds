@@ -1,6 +1,7 @@
-/* Same as elf_x86_64_fbsd_efi.lds, except for OUTPUT_FORMAT below - KEEP IN SYNC */
-OUTPUT_FORMAT("elf64-x86-64", "elf64-x86-64", "elf64-x86-64")
-OUTPUT_ARCH(i386:x86-64)
+/* SPDX-License-Identifier: GPL-2.0-or-later OR BSD-2-Clause */
+
+OUTPUT_FORMAT("elf64-littleriscv", "elf64-littleriscv", "elf64-littleriscv")
+OUTPUT_ARCH(riscv)
 ENTRY(_start)
 SECTIONS
 {
@@ -14,26 +15,29 @@ SECTIONS
   .eh_frame_hdr : { *(.eh_frame_hdr) }
   .gcc_except_table : { *(.gcc_except_table*) }
   . = ALIGN(4096);
-  .text :
-  {
-   _text = .;
-   *(.text)
-   *(.text.*)
-   *(.gnu.linkonce.t.*)
-   *(.plt)
-   . = ALIGN(16);
+  .text : {
+    _text = .;
+    *(.text)
+    *(.text.*)
+    *(.gnu.linkonce.t.*)
+    *(.plt)
+    . = ALIGN(16);
   }
   _etext = .;
   _text_size = _etext - _text;
-
+  . = ALIGN(65536);
+  _DYNAMIC = .;
+  .dynamic  : { *(.dynamic) }
   . = ALIGN(4096);
   .data :
   {
    _data = .;
+   *(.sdata)
+   *(.data)
+   *(.data1)
+   *(.data.*)
    *(.got.plt)
    *(.got)
-   *(.data*)
-   *(.sdata)
 
    /*
     * Note that these aren't the using the GNU "CONSTRUCTOR" output section
@@ -64,25 +68,24 @@ SECTIONS
 
    /* the EFI loader doesn't seem to like a .bss section, so we stick
       it all into .data: */
+   . = ALIGN(16);
+   _bss = .;
    *(.sbss)
    *(.scommon)
    *(.dynbss)
    *(.bss*)
    *(COMMON)
    *(.rel.local)
-  }
-  .note.gnu.build-id : { *(.note.gnu.build-id) }
+   . = ALIGN(16);
 
-  _edata = .;
-  _data_size = _edata - _etext;
+   _bss_end = .;
+  }
   . = ALIGN(4096);
   .reloc :
   {
-   KEEP (*(.reloc))
+    KEEP (*(.reloc))
   }
-  . = ALIGN(4096);
-  _DYNAMIC = .;
-  .dynamic  : { *(.dynamic) }
+
   . = ALIGN(4096);
   .rela :
   {
@@ -95,6 +98,7 @@ SECTIONS
     *(.rela.fini_array*)
     *(.rela.ctors*)
     *(.rela.dtors*)
+
   }
   . = ALIGN(4096);
   .rela.plt : { *(.rela.plt) }
@@ -121,11 +125,16 @@ SECTIONS
   _sbat_vsize = _esbat - _sbat;
   . = ALIGN(4096);
   .sbom : { *(.sbom) }
+  . = ALIGN(512);
+  _edata = .;
+  _data_size = _edata - _data;
+
   . = ALIGN(4096);
   .dynsym   : { *(.dynsym) }
   . = ALIGN(4096);
   .dynstr   : { *(.dynstr) }
   . = ALIGN(4096);
+  .note.gnu.build-id : { *(.note.gnu.build-id) }
   .ignored.reloc :
   {
     *(.rela.reloc)
