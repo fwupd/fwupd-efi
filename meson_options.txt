@@ -7,5 +7,6 @@ option('efi_sbat_distro_summary', type : 'string', value : '', description : 'SB
 option('efi_sbat_distro_pkgname', type : 'string', value : '', description : 'SBAT distribution package name, e.g. fwupd')
 option('efi_sbat_distro_version', type : 'string', value : '', description : 'SBAT distribution version, e.g. fwupd-1.5.6.fc33')
 option('efi_sbat_distro_url', type : 'string', value : '', description : 'SBAT distribution URL, e.g. https://src.fedoraproject.org/rpms/fwupd')
+option('pkgnote', type : 'string', value : '', description : 'Package metadata in JSON format')
 option('genpeimg', type : 'feature', description : 'Use genpeimg to add NX support to binaries')
 option('python', type : 'string', description : 'the absolute path of the python3 binary')
