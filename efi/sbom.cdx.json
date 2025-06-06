@@ -1,0 +1,93 @@
+{
+  "bomFormat": "CycloneDX",
+  "specVersion": "1.6",
+  "serialNumber": "urn:uuid:76c45c44-b7fe-4f50-ab8b-94c16daf4842",
+  "version": 1,
+  "metadata": {
+    "authors": [
+      {
+        "name": "Richard Hughes"
+      }
+    ],
+    "lifecycles": {
+      "phase": "pre-build"
+    }
+  },
+  "dependencies": [
+    {
+      "ref": "pkg:github/fwupd/fwupd-efi@@project_version@",
+      "dependsOn": "compiler"
+    },
+    {
+      "ref": "pkg:github/fwupd/fwupd-efi@@project_version@",
+      "dependsOn": "pkg:github/ncroxon/gnu-efi@@gnuefiver@"
+    }
+  ],
+  "components": [
+    {
+      "type": "firmware",
+      "name": "fwupdx64",
+      "version": "@project_version@",
+      "description": "EFI helpers to install system firmware",
+      "bom-ref": "pkg:github/fwupd/fwupd-efi@@project_version@",
+      "licenses": [
+        {
+          "license": {
+            "url": "https://spdx.org/licenses/LGPL-2.0.html",
+            "id": "LGPL-2.0"
+          }
+        }
+      ],
+      "authors": [
+        {
+          "name": "Richard Hughes",
+          "url": [
+            "hughsie.com"
+          ]
+        }
+      ],
+      "properties": [
+        {
+          "name": "colloquialVersion",
+          "value": "@source_version@"
+        },
+        {
+          "name": "product",
+          "value": "fwupd-efi"
+        },
+        {
+          "name": "versionScheme",
+          "value": "semver"
+        }
+      ],
+      "externalReferences": [
+        {
+          "type": "vcs",
+          "url": "@source_version@",
+          "hashes": [
+            {
+              "alg": "sha1",
+              "content": "@source_version@"
+            }
+          ]
+        },
+        {
+          "type": "website",
+          "url": "https://github.com/fwupd/fwupd-efi"
+        }
+      ]
+    },
+    {
+      "bom-ref": "pkg:github/ncroxon/gnu-efi@@gnuefiver@",
+      "type": "library",
+      "name": "gnu-efi",
+      "version": "@gnuefiver@"
+    },
+    {
+      "bom-ref": "compiler",
+      "type": "library",
+      "name": "@cc@",
+      "version": "@ccver@"
+    }
+  ]
+}
