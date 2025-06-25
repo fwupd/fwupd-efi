@@ -31,7 +31,7 @@ pe_header:
 	.2byte 	0
 coff_header:
 	.2byte	0x1c2				// Mixed ARM/Thumb
-	.2byte	NR_SECTIONS		        // nr_sections
+	.2byte	NR_SECTIONS				// nr_sections
 	.4byte	0 				// TimeDateStamp
 	.4byte	0				// PointerToSymbolTable
 	.4byte	0				// NumberOfSymbols
@@ -45,12 +45,12 @@ optional_header:
 	.2byte	0x10b				// PE32+ format
 	.byte	0x02				// MajorLinkerVersion
 	.byte	0x14				// MinorLinkerVersion
-	.4byte	_etext - _start		// SizeOfCode
+	.4byte	_text_size - ImageBase		// SizeOfCode
 	.4byte	_alldata_size - ImageBase		// SizeOfInitializedData
 	.4byte	0				// SizeOfUninitializedData
-	.4byte	_start - ImageBase		// AddressOfEntryPoint
-	.4byte	_start - ImageBase		// BaseOfCode
-	.4byte	_reloc - ImageBase		// BaseOfData
+	.4byte	_text - ImageBase		// AddressOfEntryPoint
+	.4byte	_text - ImageBase		// BaseOfCode
+	.4byte	_data - ImageBase		// BaseOfData
 
 extra_header_fields:
 	.4byte	0				// ImageBase
@@ -67,7 +67,7 @@ extra_header_fields:
 	.4byte	_image_end - ImageBase		// SizeOfImage
 
 	// Everything before the kernel image is considered part of the header
-	.4byte	_start - ImageBase		// SizeOfHeaders
+	.4byte	_text - ImageBase		// SizeOfHeaders
 	.4byte	0				// CheckSum
 	.2byte	EFI_SUBSYSTEM			// Subsystem
 	.2byte	0				// DllCharacteristics
@@ -100,15 +100,26 @@ extra_header_fields:
 section_table:
 
 	.ascii	".text\0\0\0"
-	.4byte	_evtext - _start // VirtualSize
-	.4byte	_start - ImageBase	// VirtualAddress
-	.4byte	_etext - _start		// SizeOfRawData
-	.4byte	_start - ImageBase	// PointerToRawData
+	.4byte	_text_vsize - ImageBase // VirtualSize
+	.4byte	_text - ImageBase	// VirtualAddress
+	.4byte	_text_size - ImageBase		// SizeOfRawData
+	.4byte	_text - ImageBase	// PointerToRawData
 	.4byte	0		// PointerToRelocations (0 for executables)
 	.4byte	0		// PointerToLineNumbers (0 for executables)
 	.2byte	0		// NumberOfRelocations  (0 for executables)
 	.2byte	0		// NumberOfLineNumbers  (0 for executables)
 	.4byte	0x60000020	// Characteristics (section flags)
+
+	.ascii	".data\0\0\0"
+	.4byte	_data_vsize - ImageBase			// VirtualSize
+	.4byte	_data - ImageBase			// VirtualAddress
+	.4byte	_data_size - ImageBase			// SizeOfRawData
+	.4byte	_data - ImageBase			// PointerToRawData
+	.4byte	0			// PointerToRelocations
+	.4byte	0			// PointerToLineNumbers
+	.2byte	0			// NumberOfRelocations
+	.2byte	0			// NumberOfLineNumbers
+	.4byte	0xC0000040		// Characteristics (section flags)
 
 	/*
 	 * The EFI application loader requires a relocation section
@@ -126,17 +137,6 @@ section_table:
 	.2byte	0			// NumberOfLineNumbers
 	.4byte	0x42000040		// Characteristics (section flags)
 
-	.ascii	".data\0\0\0"
-	.4byte	_data_vsize - ImageBase			// VirtualSize
-	.4byte	_data - ImageBase			// VirtualAddress
-	.4byte	_data_size - ImageBase			// SizeOfRawData
-	.4byte	_data - ImageBase			// PointerToRawData
-	.4byte	0			// PointerToRelocations
-	.4byte	0			// PointerToLineNumbers
-	.2byte	0			// NumberOfRelocations
-	.2byte	0			// NumberOfLineNumbers
-	.4byte	0xC0000040		// Characteristics (section flags)
-
 	.ascii	".rodata\0"
 	.4byte	_rodata_vsize - ImageBase			// VirtualSize
 	.4byte	_rodata - ImageBase			// VirtualAddress
@@ -147,6 +147,7 @@ section_table:
 	.2byte	0			// NumberOfRelocations
 	.2byte	0			// NumberOfLineNumbers
 	.4byte	0x40000040		// Characteristics (section flags)
+
 #ifdef USING_SBAT
 	.ascii	".sbat\0\0\0"
 	.4byte	_sbat_vsize - ImageBase			// VirtualSize
@@ -173,7 +174,7 @@ section_table:
 	.4byte	0x40000040	// Characteristics (section flags)
 #endif
 
-.balign 256
+.text
 .globl	_start
 .type _start,%function
 _start:
@@ -184,15 +185,17 @@ _start:
 	adr		r1, .L_DYNAMIC
 	ldr		r0, [r1]
 	add		r1, r0, r1
-	adr		r0, ImageBase
+	adr		r0, _start
+	sub		r0, r0, #0x1000
 	bl		_relocate
 	teq		r0, #0
-	bne		0f
+	bne		.L_exit
 
 	ldmfd		sp, {r0-r1}
-	bl		efi_main
+	bl		_entry
 
-0:	add		sp, sp, #12
+.L_exit:
+	add		sp, sp, #12
 	ldr		pc, [sp], #4
 
 .L_DYNAMIC:
@@ -201,11 +204,12 @@ _start:
 // hand-craft a dummy .reloc section so EFI knows it's a relocatable executable:
  
  	.data
-dummy:	.4byte	0
+dummy0:	.4byte	0
+dummy1:	.4byte	0
 
 #define IMAGE_REL_ABSOLUTE	0
- 	.section .areloc
- 	.4byte	dummy					// Page RVA
+ 	.section .areloc, "a", %progbits
+ 	.4byte	dummy1 - dummy0					// Page RVA
 	.4byte	12					// Block Size (2*4+2*2), must be aligned by 32 Bits
 	.2byte	(IMAGE_REL_ABSOLUTE<<12) +  0		// reloc for dummy
 	.2byte	(IMAGE_REL_ABSOLUTE<<12) +  0		// reloc for dummy
