@@ -66,6 +66,9 @@ pkgg.generate(
   name : meson.project_name(),
   filebase : 'fwupd-efi',
   description : 'fwupd-efi is the UEFI binary used with fwupd for installing UEFI firmware updates',
+  variables : {
+    'gnuefi': gnuefi.version(),
+  },
 )
 
 fwupd_efi_dep = declare_dependency()
