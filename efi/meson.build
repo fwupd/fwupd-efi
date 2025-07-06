@@ -37,12 +37,29 @@ endif
 
 efi_libdir = get_option('efi-libdir')
 if efi_libdir == ''
-  multi = run_command(cc.cmd_array(), '-print-multi-os-directory', check: true).stdout().strip()
-  efi_libdir = join_paths('/usr/lib/', multi)
-  if not fs.is_dir(join_paths(efi_libdir, 'gnuefi'))
-    efi_libdir = gnuefi.get_variable('libdir', default_value: '/usr/lib')
+  efi_libdir_default = '/usr/lib'
+  multi_result = run_command(
+    cc.cmd_array(),
+    '-print-multi-os-directory',
+    check: false,
+  )
+  if multi_result.returncode() == 0
+    multi = multi_result.stdout().strip()
+    if multi != ''
+      efi_libdir_multi = join_paths(efi_libdir_default, multi)
+      if (fs.is_dir(join_paths(efi_libdir_multi, 'gnuefi')) or
+          fs.is_file(join_paths(efi_libdir_multi, 'libgnuefi.a')) )
+        efi_libdir = efi_libdir_multi
+      else
+        efi_libdir = gnuefi.get_variable('libdir', default_value: efi_libdir_default)
+      endif
+    endif
+  else
+    warning('Compiler does not support -print-multi-os-directory, using default efi-libdir path')
+    efi_libdir = efi_libdir_default
   endif
 endif
+message('efi_libdir:', efi_libdir)
 
 # The name we need to look for on this arch and OS: elf_x86_64_fbsd_efi.lds
 lds_os = ''
