@@ -13,9 +13,12 @@ if uswid.found()
   con2 = configuration_data()
   con2.set('project_version', meson.project_version())
   con2.set('source_version', source_version)
-  swid_xml = configure_file(
-    input : 'swid.xml.in',
-    output : 'swid.xml',
+  con2.set('cc', cc.get_id())
+  con2.set('ccver', cc.version())
+  con2.set('gnuefiver', gnuefi.version())
+  sbom = configure_file(
+    input : 'sbom.cdx.json',
+    output : 'sbom.cdx.json',
     configuration : con2,
   )
 endif
@@ -293,7 +296,7 @@ if uswid.found()
                             'uswid',
                             '--cc', cc.cmd_array()[-1],
                             '--objcopy', objcopy,
-                            '--load', swid_xml,
+                            '--load', sbom,
                             '--save', '@OUTPUT@',
                           ] + uswid_cflags)
 endif
