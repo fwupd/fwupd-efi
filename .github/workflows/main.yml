@@ -12,7 +12,7 @@ jobs:
   pre-commit:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Refresh dependencies
         run: sudo apt update
       - name: Install dependencies
@@ -31,7 +31,7 @@ jobs:
       matrix:
         os: [fedora, debian-x86_64, arch, debian-i386]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Docker login
         run: docker login docker.pkg.github.com -u $GITHUB_ACTOR -p $GITHUB_TOKEN
         env:
