@@ -197,6 +197,9 @@ elif host_cpu == 'x86'
                    '-mno-mmx',
                    '-mno-red-zone',
                    '-m32']
+elif host_cpu == 'loongarch64'
+  compile_args += ['-mno-lsx',
+                   '-mno-lasx']
 # no special cases for aarch64 or arm
 endif
 
