@@ -229,7 +229,7 @@ if objcopy_manualsymbols
   endif
   efi_format = ['-O', 'binary']
 else
-  efi_format = ['--target=efi-app-@0@'.format(gnu_efi_arch)]
+  efi_format = ['--output-target=efi-app-@0@'.format(gnu_efi_arch)]
 endif
 
 libgcc_file_name = run_command(cc.cmd_array(), '-print-libgcc-file-name', check: true).stdout().strip()

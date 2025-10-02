@@ -42,12 +42,8 @@ def _run_objcopy(args):
     # Use "binary" instead, and add required symbols manually.
     if args.objcopy_manualsymbols:
         argv.extend(["-O", "binary"])
-    elif args.os == "freebsd":
-        # `--target` option is missing and --input-target doesn't recognize
-        # "efi-app-*"
-        argv.extend(["--output-target", "efi-app-{}".format(args.arch)])
     else:
-        argv.extend(["--target", "efi-app-{}".format(args.arch)])
+        argv.extend(["--output-target", "efi-app-{}".format(args.arch)])
 
     try:
         subprocess.run(argv, check=True)
