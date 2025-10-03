@@ -9,7 +9,7 @@ Version:   #VERSION#
 Release:   0.#BUILD#%{?alphatag}%{?dist}
 License:   LGPL-2.1-or-later
 URL:       https://github.com/fwupd/fwupd-efi
-Source0:   https://github.com/fwupd/fwupd-efi/releases/download/%{version}/%{name}-%{version}.tar.xz
+Source0:   https://github.com/fwupd/%{name}/archive/refs/tags/%{version}.tar.gz
 
 # these are the only architectures supporting UEFI UpdateCapsule
 ExclusiveArch: x86_64 aarch64
