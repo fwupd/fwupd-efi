@@ -37,11 +37,16 @@ endif
 
 efi_libdir = get_option('efi-libdir')
 if efi_libdir == ''
-  fs = import('fs')
-  multi = run_command(cc.cmd_array(), '-print-multi-os-directory', check: true).stdout().strip()
-  efi_libdir = join_paths('/usr/lib/', multi)
-  if not fs.is_dir(join_paths(efi_libdir, 'gnuefi'))
-    efi_libdir = '/usr/lib'
+  efi_libdir = '/usr/lib'
+  if meson.get_compiler('c').has_argument('-print-multi-os-directory')
+    fs = import('fs')
+    multi = run_command(cc.cmd_array(), '-print-multi-os-directory', check: true).stdout().strip()
+    efi_libdir_multi = join_paths(efi_libdir, multi)
+    if fs.is_dir(join_paths(efi_libdir_multi, 'gnuefi'))
+      efi_libdir = efi_libdir_multi
+    endif
+  else
+    warning('Compiler does not support -print-multi-os-directory, using default efi-libdir path')
   endif
 endif
 
@@ -166,6 +171,7 @@ compile_args = ['-Og',
                 '-Wvla',
                 '-std=gnu11',
                 '-fpic',
+                '-fno-pie',
                 '-funsigned-char',
                 '-fshort-wchar',
                 '-ffreestanding',
@@ -206,6 +212,7 @@ endif
 efi_ldflags = ['-T',
                join_paths(efi_ldsdir, arch_lds),
                '-shared',
+               '-no-pie',
                '-Bsymbolic',
                '-nostdlib',
                '-znocombreloc',
@@ -340,6 +347,8 @@ dbg = custom_target('efi_debug',
                                '-j', '.sdata',
                                '-j', '.data',
                                '-j', '.dynamic',
+                               '-j', '.dynstr',
+                               '-j', '.dynsym',
                                '-j', '.rodata',
                                '-j', '.rel*',
                                '-j', '.rela*',
