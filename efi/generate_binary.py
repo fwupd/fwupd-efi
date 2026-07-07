@@ -72,7 +72,7 @@ def _add_nx_pefile(args):
         import pefile
     except ImportError:
         print("Unable to add NX support to binaries without genpeimg or python3-pefile")
-        sys.exit(1)
+        return
 
     pe = pefile.PE(args.outfile)
     pe.OPTIONAL_HEADER.DllCharacteristics |= pefile.DLL_CHARACTERISTICS[
