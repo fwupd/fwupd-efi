@@ -13,7 +13,7 @@ cc_ld = find_program(cc.get_linker_id())
 objcopy = find_program('objcopy')
 objcopy_version = run_command(objcopy, '--version', check: true).stdout().split('\n')[0].split(' ')[-1]
 
-gnuefi = dependency('gnu-efi', version: '>= 3.0.18')
+gnuefi = dependency('gnu-efi', required: false)
 prefix = get_option('prefix')
 libdir = join_paths(prefix, get_option('libdir'))
 libexecdir = join_paths(prefix, get_option('libexecdir'))
