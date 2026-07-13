@@ -29,7 +29,11 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [fedora, debian-x86_64, arch, debian-i386]
+        os:
+          - arch-amd64
+          - debian-amd64
+          - debian-amd64-i386
+          - fedora-amd64
     steps:
       - uses: actions/checkout@v6.0.2
       - name: Docker login
@@ -39,7 +43,6 @@ jobs:
       - name: Build in container
         env:
           CI_NETWORK: true
-          CI: true
         run: |
           echo $GITHUB_WORKSPACE
-          docker run --privileged -e CI=true -t -v $GITHUB_WORKSPACE:/github/workspace docker.pkg.github.com/fwupd/fwupd/fwupd-${{matrix.os}}:latest ./contrib/ci.sh
+          docker run --privileged -e CI=true -t -v $GITHUB_WORKSPACE:/github/workspace "ghcr.io/fwupd/fwupd/fwupd-${{ matrix.os }}:latest" ./contrib/ci.sh
