@@ -1,0 +1,37 @@
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+indent_size = 8
+indent_style = space
+insert_final_newline = true
+max_line_length = 100
+tab_width = 8
+trim_trailing_whitespace = true
+
+[.git/**]
+max_line_length = 72
+
+[*.md]
+max_line_length = 80
+
+[*.{yml,yaml}]
+indent_size = 2
+
+[meson{.build,.options,_options.txt}]
+indent_size = 2
+
+[*.py]
+indent_size = 4
+# default for python black
+max_line_length = 88
+
+[*.{sh,{pre,post}{inst,rm}}]
+indent_size = 4
+
+[*.rs]
+indent_size = 4
+
+[*.{c,h}]
+indent_style = tab
