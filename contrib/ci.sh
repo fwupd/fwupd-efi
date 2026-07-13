@@ -7,7 +7,8 @@ rm -rf build/
 # disable the safe directory feature
 git config --global safe.directory "*"
 
-if [ "$OS" = "fedora" ]; then
+case "$OS" in
+fedora*)
     meson build
     VERSION=`meson introspect build --projectinfo | jq -r .version`
     RPMVERSION=${VERSION//-/.}
@@ -26,7 +27,8 @@ if [ "$OS" = "fedora" ]; then
     rpmbuild -ba build/fwupd-efi.spec
     mkdir -p dist
     cp $HOME/rpmbuild/RPMS/*/*.rpm dist
-elif [ "$OS" = "debian-x86_64" ] || [ "$OS" = "debian-i386" ]; then
+    ;;
+debian*)
     export DEBFULLNAME="CI Builder"
     export DEBEMAIL="ci@travis-ci.org"
     VERSION=`head meson.build | grep ' version :' | cut -d \' -f2`
@@ -39,7 +41,9 @@ elif [ "$OS" = "debian-x86_64" ] || [ "$OS" = "debian-i386" ]; then
     EDITOR=/bin/true dch --create --package fwupd-efi -v $VERSION "CI Build"
     debuild --no-lintian --preserve-envvar CI --preserve-envvar CC \
         --preserve-envvar QUBES_OPTION
-else
+    ;;
+*)
     meson build
     ninja -C build
-fi
+    ;;
+esac
