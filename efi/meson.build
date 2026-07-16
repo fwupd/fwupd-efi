@@ -41,7 +41,7 @@ if efi_libdir == ''
   multi = run_command(cc.cmd_array(), '-print-multi-os-directory', check: true).stdout().strip()
   efi_libdir = join_paths('/usr/lib/', multi)
   if not fs.is_dir(join_paths(efi_libdir, 'gnuefi'))
-    efi_libdir = '/usr/lib'
+    efi_libdir = gnuefi.get_variable('libdir', default_value: '/usr/lib')
   endif
 endif
 
