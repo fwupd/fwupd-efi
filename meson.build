@@ -5,6 +5,8 @@ project('fwupd-efi', 'c',
   default_options : ['warning_level=2', 'c_std=c99'],
 )
 
+fs = import('fs')
+
 conf = configuration_data()
 conf.set_quoted('PACKAGE_VERSION', meson.project_version())
 

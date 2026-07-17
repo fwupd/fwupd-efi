@@ -37,7 +37,6 @@ endif
 
 efi_libdir = get_option('efi-libdir')
 if efi_libdir == ''
-  fs = import('fs')
   multi = run_command(cc.cmd_array(), '-print-multi-os-directory', check: true).stdout().strip()
   efi_libdir = join_paths('/usr/lib/', multi)
   if not fs.is_dir(join_paths(efi_libdir, 'gnuefi'))
@@ -55,28 +54,23 @@ arch_lds = 'efi.lds'
 arch_crt = 'crt0.o'
 if efi_ldsdir == ''
   efi_ldsdir = join_paths(efi_libdir, 'gnuefi', gnu_efi_path_arch)
-  cmd = run_command('test', '-f', join_paths(efi_ldsdir, arch_lds), check: false)
-  if cmd.returncode() != 0
+  if not fs.is_file(efi_ldsdir / arch_lds)
     arch_lds = 'elf_@0@@1@_efi.lds'.format(gnu_efi_path_arch, lds_os)
     arch_crt = 'crt0-efi-@0@.o'.format(gnu_efi_path_arch)
     efi_ldsdir = join_paths(efi_libdir, 'gnuefi')
-    cmd = run_command('test', '-f', join_paths(efi_ldsdir, arch_lds), check: false)
   endif
-  if cmd.returncode() != 0
+  if not fs.is_file(efi_ldsdir / arch_lds)
     efi_ldsdir = efi_libdir
-    cmd = run_command('test', '-f', join_paths(efi_ldsdir, arch_lds), check: false)
-    if cmd.returncode() != 0
+    if not fs.is_file(efi_ldsdir / arch_lds)
       error('Cannot find @0@'.format(arch_lds))
     endif
   endif
 else
-  cmd = run_command('test', '-f', join_paths(efi_ldsdir, arch_lds), check: false)
-  if cmd.returncode() != 0
+  if not fs.is_file(efi_ldsdir / arch_lds)
     arch_lds = 'elf_@0@@1@_efi.lds'.format(gnu_efi_path_arch, lds_os)
     arch_crt = 'crt0-efi-@0@.o'.format(gnu_efi_path_arch)
-    cmd = run_command('test', '-f', join_paths(efi_ldsdir, arch_lds), check: false)
   endif
-  if cmd.returncode() != 0
+  if not fs.is_file(efi_ldsdir / arch_lds)
     error('Cannot find @0@'.format(arch_lds))
   endif
 endif
