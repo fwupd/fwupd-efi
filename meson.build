@@ -29,7 +29,12 @@ endif
 
 efi_app_location = join_paths(libexecdir, 'fwupd', 'efi')
 host_cpu = host_machine.cpu_family()
-if host_cpu == 'x86'
+EFI_MACHINE_TYPE_NAME = gnuefi.get_variable('efi_machine_type_name', default_value: '')
+gnu_efi_arch = gnuefi.get_variable('gnu_efi_arch', default_value: '')
+if EFI_MACHINE_TYPE_NAME != '' and gnu_efi_arch != ''
+  message('pkg-config EFI_MACHINE_TYPE_NAME: ' + EFI_MACHINE_TYPE_NAME)
+  message('pkg-config gnu_efi_arch: ' + gnu_efi_arch)
+elif host_cpu == 'x86'
         EFI_MACHINE_TYPE_NAME = 'ia32'
         gnu_efi_arch = 'ia32'
 elif host_cpu == 'x86_64'
