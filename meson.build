@@ -81,7 +81,7 @@ fwupd_efi_dep = declare_dependency()
 # SBOM support
 uswid = find_program('uswid', required: false)
 if not uswid.found()
-  warning('uswid is unfound, so not embedding uSWID metadata')
+  warning('uswid is not found, so not embedding uSWID metadata')
 endif
 
 subdir('efi')
