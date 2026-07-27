@@ -15,7 +15,7 @@
     <p>
       The source was imported from the combined fwupd project, and is now
       maintained separately to allow fwupd userspace releases and fwupd-efi
-      UEFI executable releases to follow a different candence.
+      UEFI executable releases to follow a different cadence.
     </p>
   </description>
   <url type="bugtracker">https://github.com/fwupd/fwupd-efi/issues</url>
