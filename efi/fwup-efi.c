@@ -17,9 +17,10 @@ fwup_delete_variable(CHAR16 *name, EFI_GUID *guid)
 {
 	EFI_STATUS rc;
 	UINT32 attrs = 0;
+	UINTN size = 0;
 
 	/* get the attrs so we can delete it */
-	rc = uefi_call_wrapper(RT->GetVariable, 5, name, guid, &attrs, NULL, NULL);
+	rc = uefi_call_wrapper(RT->GetVariable, 5, name, guid, &attrs, &size, NULL);
 	if (EFI_ERROR(rc)) {
 		if (rc == EFI_NOT_FOUND) {
 			fwup_debug(L"Not deleting variable '%s' as not found", name);
