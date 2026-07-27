@@ -378,10 +378,17 @@ fwup_update_ux_capsule_checksum(UX_CAPSULE_HEADER *payload_hdr)
 
 static EFI_STATUS
 fwup_check_gop_for_ux_capsule(EFI_HANDLE loaded_image,
-			      EFI_CAPSULE_HEADER *capsule)
+			      EFI_CAPSULE_HEADER *capsule,
+			      UINTN fsize)
 {
 	UX_CAPSULE_HEADER *payload_hdr;
 	EFI_STATUS rc;
+
+	if (capsule->HeaderSize < sizeof(EFI_CAPSULE_HEADER) ||
+	    capsule->HeaderSize > fsize - sizeof(UX_CAPSULE_HEADER)) {
+		fwup_warning(L"Invalid capsule header size %u", capsule->HeaderSize);
+		return EFI_INVALID_PARAMETER;
+	}
 
 	payload_hdr = (UX_CAPSULE_HEADER *) (((UINT8 *) capsule) + capsule->HeaderSize);
 	rc = fwup_get_gop_mode(&payload_hdr->mode, loaded_image);
@@ -442,7 +449,7 @@ fwup_add_update_capsule(FWUP_UPDATE_TABLE *update, EFI_CAPSULE_HEADER **capsule_
 
 	if (CompareGuid(&update->info->guid, &ux_capsule_guid) == 0) {
 		fwup_debug(L"Checking GOP for ux capsule");
-		rc = fwup_check_gop_for_ux_capsule(loaded_image, capsule);
+		rc = fwup_check_gop_for_ux_capsule(loaded_image, capsule, fsize);
 		if (EFI_ERROR(rc))
 			return EFI_UNSUPPORTED;
 	}
