@@ -81,7 +81,7 @@ fwup_populate_update_info(CHAR16 *name, FWUP_UPDATE_TABLE *info_out)
 	info = (FWUP_UPDATE_INFO *)info_ptr;
 
 	if (info_size < sizeof(*info)) {
-		fwup_warning(L"Update '%s' is is too small", name);
+		fwup_warning(L"Update '%s' is too small", name);
 		return EFI_INVALID_PARAMETER;
 	}
 
