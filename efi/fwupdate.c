@@ -617,8 +617,8 @@ efi_main(EFI_HANDLE image, EFI_SYSTEM_TABLE *systab)
 	n_updates = j;
 	fwup_debug(L"n_updates: %d", n_updates);
 
-	cbd_data[i].Length = 0;
-	cbd_data[i].Union.ContinuationPointer = 0;
+	cbd_data[n_updates].Length = 0;
+	cbd_data[n_updates].Union.ContinuationPointer = 0;
 
 	/* step 3: update the state variables */
 	rc = fwup_set_update_statuses(updates);
