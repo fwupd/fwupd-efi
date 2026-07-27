@@ -160,7 +160,7 @@ fwup_populate_update_table(FWUP_UPDATE_TABLE **updates, UINTN *n_updates_out)
 		    StrCmp(variable_name, L"FWUPDATE_DEBUG_LOG") == 0)
 			continue;
 
-		if (n_updates > FWUP_NUM_CAPSULE_UPDATES_MAX) {
+		if (n_updates >= FWUP_NUM_CAPSULE_UPDATES_MAX) {
 			fwup_warning(L"Ignoring update %s", variable_name);
 			continue;
 		}
