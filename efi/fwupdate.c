@@ -436,6 +436,11 @@ fwup_add_update_capsule(FWUP_UPDATE_TABLE *update, EFI_CAPSULE_HEADER **capsule_
 	cbd_len = fsize;
 	cbd_data = (EFI_PHYSICAL_ADDRESS)(UINTN)fbuf;
 	capsule = cap_out = (EFI_CAPSULE_HEADER *)fbuf;
+	if (cap_out->CapsuleImageSize > fsize) {
+		fwup_warning(L"Capsule image size %u exceeds file size %d",
+			     cap_out->CapsuleImageSize, fsize);
+		return EFI_INVALID_PARAMETER;
+	}
 	if (cap_out->Flags == 0 &&
 	    CompareGuid(&update->info->guid, &ux_capsule_guid) != 0) {
 #if defined(__aarch64__) || (defined(__riscv) && __riscv_xlen == 64)
