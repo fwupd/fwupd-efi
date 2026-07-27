@@ -555,7 +555,7 @@ efi_main(EFI_HANDLE image, EFI_SYSTEM_TABLE *systab)
 
 	InitializeLib(image, systab);
 
-	/* if SHIM_DEBUG is set, fwup_info info for our attached debugger */
+	/* if SHIM_DEBUG is set, print info for our attached debugger */
 	fwup_debug_hook();
 
 	/* show the version to screen */
