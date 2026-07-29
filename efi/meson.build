@@ -349,3 +349,17 @@ dbg = custom_target('efi_debug',
                                ['@INPUT@', '@OUTPUT@'],
                     install : false,
                     install_dir : debugdir)
+
+selftest = executable('fwup-selftest',
+  'fwup-selftest.c',
+  c_args: [
+    '-DDEBUGDIR="/mock/"',
+    '-Wno-unused-function',
+    '-Wno-unused-variable',
+    '-Wno-unused-parameter',
+    '-Wno-address-of-packed-member',
+  ],
+  include_directories: include_directories('mock-include', '.'),
+  native: true,
+)
+test('fwup-selftest', selftest)
