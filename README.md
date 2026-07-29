@@ -41,6 +41,24 @@ ninja -C build
 ninja -C build install
 ```
 
+## Fuzzing
+
+Fuzz targets are available for the capsule and update-info parsing code.
+Building them requires `clang` with libFuzzer support:
+
+```bash
+CC=clang meson setup build-fuzz -Dfuzzing=true -Defi-libdir=/usr/lib -Defi-ldsdir=/usr/lib
+ninja -C build-fuzz
+```
+
+Then run a target with an optional corpus directory:
+
+```bash
+mkdir -p corpus/update-info corpus/capsule
+./build-fuzz/efi/fwup-fuzz-update-info corpus/update-info -detect_leaks=0
+./build-fuzz/efi/fwup-fuzz-capsule corpus/capsule
+```
+
 ## UEFI SBAT Support
 
 The packager should also specify the SBAT metadata required for the secure boot

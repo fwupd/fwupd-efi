@@ -363,3 +363,33 @@ selftest = executable('fwup-selftest',
   native: true,
 )
 test('fwup-selftest', selftest)
+
+if get_option('fuzzing')
+  fuzz_c_args = [
+    '-DDEBUGDIR="/mock/"',
+    '-Wno-unused-function',
+    '-Wno-unused-variable',
+    '-Wno-unused-parameter',
+    '-Wno-address-of-packed-member',
+    '-fsanitize=fuzzer,address,undefined',
+    '-fno-sanitize-recover=all',
+  ]
+  fuzz_link_args = ['-fsanitize=fuzzer,address,undefined']
+  fuzz_incdirs = include_directories('mock-include', '.')
+
+  executable('fwup-fuzz-update-info',
+    'fwup-fuzz-update-info.c',
+    c_args: fuzz_c_args,
+    link_args: fuzz_link_args,
+    include_directories: fuzz_incdirs,
+    native: true,
+  )
+
+  executable('fwup-fuzz-capsule',
+    'fwup-fuzz-capsule.c',
+    c_args: fuzz_c_args,
+    link_args: fuzz_link_args,
+    include_directories: fuzz_incdirs,
+    native: true,
+  )
+endif
