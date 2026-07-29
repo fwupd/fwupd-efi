@@ -309,23 +309,52 @@ test_gop_headersize_too_small(void)
 	memset(buf, 0, sizeof(buf));
 	EFI_CAPSULE_HEADER *cap = (EFI_CAPSULE_HEADER *)buf;
 	cap->HeaderSize = sizeof(EFI_CAPSULE_HEADER) - 1;
+	cap->CapsuleImageSize = sizeof(buf);
 
 	EFI_STATUS rc = fwup_check_gop_for_ux_capsule(NULL, cap, sizeof(buf));
 	assert(rc == EFI_INVALID_PARAMETER);
 }
 
 static void
-test_gop_headersize_too_large(void)
+test_gop_capsule_image_size_less_than_header(void)
 {
 	mock_init();
-	UINTN fsize = sizeof(EFI_CAPSULE_HEADER) + sizeof(UX_CAPSULE_HEADER);
-	UINT8 *buf = calloc(1, fsize);
+	UINT8 buf[256];
+	memset(buf, 0, sizeof(buf));
 	EFI_CAPSULE_HEADER *cap = (EFI_CAPSULE_HEADER *)buf;
-	cap->HeaderSize = (UINT32)fsize; /* exceeds fsize - sizeof(UX_CAPSULE_HEADER) */
+	cap->HeaderSize = sizeof(EFI_CAPSULE_HEADER);
+	cap->CapsuleImageSize = sizeof(EFI_CAPSULE_HEADER) - 1;
+
+	EFI_STATUS rc = fwup_check_gop_for_ux_capsule(NULL, cap, sizeof(buf));
+	assert(rc == EFI_INVALID_PARAMETER);
+}
+
+static void
+test_gop_ux_payload_too_small(void)
+{
+	mock_init();
+	UINT8 buf[256];
+	memset(buf, 0, sizeof(buf));
+	EFI_CAPSULE_HEADER *cap = (EFI_CAPSULE_HEADER *)buf;
+	cap->HeaderSize = sizeof(EFI_CAPSULE_HEADER);
+	cap->CapsuleImageSize = sizeof(EFI_CAPSULE_HEADER) + sizeof(UX_CAPSULE_HEADER) - 1;
+
+	EFI_STATUS rc = fwup_check_gop_for_ux_capsule(NULL, cap, sizeof(buf));
+	assert(rc == EFI_INVALID_PARAMETER);
+}
+
+static void
+test_gop_fsize_too_small(void)
+{
+	mock_init();
+	UINTN fsize = sizeof(EFI_CAPSULE_HEADER) + sizeof(UX_CAPSULE_HEADER) - 1;
+	_cleanup_free UINT8 *buf = calloc(1, fsize);
+	EFI_CAPSULE_HEADER *cap = (EFI_CAPSULE_HEADER *)buf;
+	cap->HeaderSize = sizeof(EFI_CAPSULE_HEADER);
+	cap->CapsuleImageSize = sizeof(EFI_CAPSULE_HEADER) + sizeof(UX_CAPSULE_HEADER);
 
 	EFI_STATUS rc = fwup_check_gop_for_ux_capsule(NULL, cap, fsize);
 	assert(rc == EFI_INVALID_PARAMETER);
-	free(buf);
 }
 
 static void
@@ -336,10 +365,8 @@ test_gop_headersize_exact_boundary(void)
 	_cleanup_free UINT8 *buf = calloc(1, fsize);
 	EFI_CAPSULE_HEADER *cap = (EFI_CAPSULE_HEADER *)buf;
 	cap->HeaderSize = sizeof(EFI_CAPSULE_HEADER);
+	cap->CapsuleImageSize = fsize;
 
-	/* fwup_get_gop_mode will fail (LibLocateHandle returns EFI_NOT_FOUND),
-	 * so fwup_check_gop_for_ux_capsule returns EFI_UNSUPPORTED -- but the
-	 * bounds check itself passes */
 	EFI_STATUS rc = fwup_check_gop_for_ux_capsule(NULL, cap, fsize);
 	assert(rc == EFI_UNSUPPORTED);
 }
@@ -352,6 +379,7 @@ test_gop_headersize_one_past(void)
 	_cleanup_free UINT8 *buf = calloc(1, fsize);
 	EFI_CAPSULE_HEADER *cap = (EFI_CAPSULE_HEADER *)buf;
 	cap->HeaderSize = sizeof(EFI_CAPSULE_HEADER) + 1;
+	cap->CapsuleImageSize = fsize;
 
 	EFI_STATUS rc = fwup_check_gop_for_ux_capsule(NULL, cap, fsize);
 	assert(rc == EFI_INVALID_PARAMETER);
@@ -464,9 +492,8 @@ test_populate_info_variable_not_found(void)
  * ================================================================ */
 
 /*
- * test that CapsuleImageSize > fsize is rejected
- * we test the validation inline since fwup_add_update_capsule requires
- * deep file I/O mocking; instead we replicate the check
+ * these tests replicate the validation from fwup_add_update_capsule
+ * inline since that function requires deep file I/O mocking
  */
 static void
 test_capsule_image_size_exceeds_file(void)
@@ -476,8 +503,21 @@ test_capsule_image_size_exceeds_file(void)
 	EFI_CAPSULE_HEADER *cap = (EFI_CAPSULE_HEADER *)fbuf;
 	cap->CapsuleImageSize = (UINT32)(fsize + 1);
 
-	/* replicate the validation from fwup_add_update_capsule */
-	BOOLEAN rejected = (cap->CapsuleImageSize > fsize);
+	BOOLEAN rejected = (cap->CapsuleImageSize < sizeof(EFI_CAPSULE_HEADER) ||
+			    cap->CapsuleImageSize > fsize);
+	assert(rejected == TRUE);
+}
+
+static void
+test_capsule_image_size_too_small(void)
+{
+	UINTN fsize = 128;
+	_cleanup_free UINT8 *fbuf = calloc(1, fsize);
+	EFI_CAPSULE_HEADER *cap = (EFI_CAPSULE_HEADER *)fbuf;
+	cap->CapsuleImageSize = sizeof(EFI_CAPSULE_HEADER) - 1;
+
+	BOOLEAN rejected = (cap->CapsuleImageSize < sizeof(EFI_CAPSULE_HEADER) ||
+			    cap->CapsuleImageSize > fsize);
 	assert(rejected == TRUE);
 }
 
@@ -498,6 +538,7 @@ test_capsule_image_size_valid(void)
 	cap->CapsuleImageSize = (UINT32)fsize;
 
 	BOOLEAN ok = (fsize >= sizeof(EFI_CAPSULE_HEADER) &&
+		      cap->CapsuleImageSize >= sizeof(EFI_CAPSULE_HEADER) &&
 		      cap->CapsuleImageSize <= fsize);
 	assert(ok == TRUE);
 }
@@ -640,7 +681,9 @@ main(void)
 
 	printf("GOP for UX capsule (HeaderSize bounds):\n");
 	RUN_TEST(test_gop_headersize_too_small);
-	RUN_TEST(test_gop_headersize_too_large);
+	RUN_TEST(test_gop_capsule_image_size_less_than_header);
+	RUN_TEST(test_gop_ux_payload_too_small);
+	RUN_TEST(test_gop_fsize_too_small);
 	RUN_TEST(test_gop_headersize_exact_boundary);
 	RUN_TEST(test_gop_headersize_one_past);
 
@@ -653,6 +696,7 @@ main(void)
 
 	printf("capsule validation:\n");
 	RUN_TEST(test_capsule_image_size_exceeds_file);
+	RUN_TEST(test_capsule_image_size_too_small);
 	RUN_TEST(test_capsule_file_too_small);
 	RUN_TEST(test_capsule_image_size_valid);
 
