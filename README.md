@@ -55,7 +55,7 @@ Then run a target with an optional corpus directory:
 
 ```bash
 mkdir -p corpus/update-info corpus/capsule
-./build-fuzz/efi/fwup-fuzz-update-info corpus/update-info -detect_leaks=0
+./build-fuzz/efi/fwup-fuzz-update-info corpus/update-info
 ./build-fuzz/efi/fwup-fuzz-capsule corpus/capsule
 ```
 
