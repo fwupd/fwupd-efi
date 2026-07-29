@@ -385,7 +385,9 @@ fwup_check_gop_for_ux_capsule(EFI_HANDLE loaded_image,
 	EFI_STATUS rc;
 
 	if (capsule->HeaderSize < sizeof(EFI_CAPSULE_HEADER) ||
-	    capsule->HeaderSize > fsize - sizeof(UX_CAPSULE_HEADER)) {
+	    capsule->CapsuleImageSize < capsule->HeaderSize ||
+	    capsule->CapsuleImageSize - capsule->HeaderSize < sizeof(UX_CAPSULE_HEADER) ||
+	    capsule->HeaderSize + sizeof(UX_CAPSULE_HEADER) > fsize) {
 		fwup_warning(L"Invalid capsule header size %u", capsule->HeaderSize);
 		return EFI_INVALID_PARAMETER;
 	}
@@ -436,8 +438,9 @@ fwup_add_update_capsule(FWUP_UPDATE_TABLE *update, EFI_CAPSULE_HEADER **capsule_
 	cbd_len = fsize;
 	cbd_data = (EFI_PHYSICAL_ADDRESS)(UINTN)fbuf;
 	capsule = cap_out = (EFI_CAPSULE_HEADER *)fbuf;
-	if (cap_out->CapsuleImageSize > fsize) {
-		fwup_warning(L"Capsule image size %u exceeds file size %d",
+	if (cap_out->CapsuleImageSize < sizeof(EFI_CAPSULE_HEADER) ||
+	    cap_out->CapsuleImageSize > fsize) {
+		fwup_warning(L"Invalid capsule image size %u for file size %d",
 			     cap_out->CapsuleImageSize, fsize);
 		return EFI_INVALID_PARAMETER;
 	}
