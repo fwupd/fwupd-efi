@@ -73,7 +73,7 @@ fwup_populate_update_info(CHAR16 *name, FWUP_UPDATE_TABLE *info_out)
 	FWUP_UPDATE_INFO *info = NULL;
 	UINTN info_size = 0;
 	UINT32 attrs = 0;
-	VOID *info_ptr = NULL;
+	_cleanup_free VOID *info_ptr = NULL;
 
 	rc = fwup_get_variable(name, &fwupdate_guid, &info_ptr, &info_size, &attrs);
 	if (EFI_ERROR(rc))
@@ -109,7 +109,7 @@ fwup_populate_update_info(CHAR16 *name, FWUP_UPDATE_TABLE *info_out)
 		return EFI_INVALID_PARAMETER;
 	}
 
-	info_out->info = info;
+	info_out->info = _steal_pointer(&info_ptr);
 	info_out->size = info_size;
 	info_out->attrs = attrs;
 	info_out->name = StrDuplicate(name);
@@ -189,7 +189,8 @@ fwup_populate_update_table(FWUP_UPDATE_TABLE **updates, UINTN *n_updates_out)
 static EFI_STATUS
 fwup_search_file(EFI_DEVICE_PATH **file_dp, EFI_FILE_HANDLE *fh)
 {
-	EFI_DEVICE_PATH *dp, *parent_dp;
+	EFI_DEVICE_PATH *dp;
+	_cleanup_free EFI_DEVICE_PATH *parent_dp = NULL;
 	EFI_GUID sfsp = SIMPLE_FILE_SYSTEM_PROTOCOL;
 	EFI_GUID dpp = DEVICE_PATH_PROTOCOL;
 	UINTN n_handles, count;
