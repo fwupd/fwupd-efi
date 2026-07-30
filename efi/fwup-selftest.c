@@ -240,6 +240,16 @@ test_dp_size_zero_limit(void)
 	assert(sz == -1);
 }
 
+static void
+test_dp_size_zero_length_node(void)
+{
+	UINT8 buf[8];
+	build_dp_node(buf, 0x01, 0x01, 0);
+	build_dp_end(buf + 4);
+	INTN sz = fwup_dp_size((EFI_DEVICE_PATH *)buf, 100);
+	assert(sz == -1);
+}
+
 /* ================================================================
  * Group 2: fwup_update_ux_capsule_checksum
  * ================================================================ */
