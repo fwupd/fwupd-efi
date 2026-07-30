@@ -403,6 +403,22 @@ fwup_check_gop_for_ux_capsule(EFI_HANDLE loaded_image,
 }
 
 static EFI_STATUS
+fwup_validate_capsule_size(EFI_CAPSULE_HEADER *capsule, UINTN fsize)
+{
+	if (capsule->CapsuleImageSize < sizeof(EFI_CAPSULE_HEADER) ||
+	    capsule->CapsuleImageSize > fsize)
+		return EFI_INVALID_PARAMETER;
+	return EFI_SUCCESS;
+}
+
+static void
+fwup_cbd_set_terminator(EFI_CAPSULE_BLOCK_DESCRIPTOR *cbd, UINTN index)
+{
+	cbd[index].Length = 0;
+	cbd[index].Union.ContinuationPointer = 0;
+}
+
+static EFI_STATUS
 fwup_add_update_capsule(FWUP_UPDATE_TABLE *update, EFI_CAPSULE_HEADER **capsule_out,
 			EFI_CAPSULE_BLOCK_DESCRIPTOR *cbd_out, EFI_HANDLE loaded_image)
 {
@@ -438,8 +454,7 @@ fwup_add_update_capsule(FWUP_UPDATE_TABLE *update, EFI_CAPSULE_HEADER **capsule_
 	cbd_len = fsize;
 	cbd_data = (EFI_PHYSICAL_ADDRESS)(UINTN)fbuf;
 	capsule = cap_out = (EFI_CAPSULE_HEADER *)fbuf;
-	if (cap_out->CapsuleImageSize < sizeof(EFI_CAPSULE_HEADER) ||
-	    cap_out->CapsuleImageSize > fsize) {
+	if (EFI_ERROR(fwup_validate_capsule_size(cap_out, fsize))) {
 		fwup_warning(L"Invalid capsule image size %u for file size %d",
 			     cap_out->CapsuleImageSize, fsize);
 		return EFI_INVALID_PARAMETER;
@@ -625,8 +640,7 @@ efi_main(EFI_HANDLE image, EFI_SYSTEM_TABLE *systab)
 	n_updates = j;
 	fwup_debug(L"n_updates: %d", n_updates);
 
-	cbd_data[n_updates].Length = 0;
-	cbd_data[n_updates].Union.ContinuationPointer = 0;
+	fwup_cbd_set_terminator(cbd_data, n_updates);
 
 	/* step 3: update the state variables */
 	rc = fwup_set_update_statuses(updates);

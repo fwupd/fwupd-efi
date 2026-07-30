@@ -501,10 +501,6 @@ test_populate_info_variable_not_found(void)
  * Group 5: capsule validation (CapsuleImageSize)
  * ================================================================ */
 
-/*
- * these tests replicate the validation from fwup_add_update_capsule
- * inline since that function requires deep file I/O mocking
- */
 static void
 test_capsule_image_size_exceeds_file(void)
 {
@@ -513,9 +509,7 @@ test_capsule_image_size_exceeds_file(void)
 	EFI_CAPSULE_HEADER *cap = (EFI_CAPSULE_HEADER *)fbuf;
 	cap->CapsuleImageSize = (UINT32)(fsize + 1);
 
-	BOOLEAN rejected = (cap->CapsuleImageSize < sizeof(EFI_CAPSULE_HEADER) ||
-			    cap->CapsuleImageSize > fsize);
-	assert(rejected == TRUE);
+	assert(EFI_ERROR(fwup_validate_capsule_size(cap, fsize)));
 }
 
 static void
@@ -526,17 +520,18 @@ test_capsule_image_size_too_small(void)
 	EFI_CAPSULE_HEADER *cap = (EFI_CAPSULE_HEADER *)fbuf;
 	cap->CapsuleImageSize = sizeof(EFI_CAPSULE_HEADER) - 1;
 
-	BOOLEAN rejected = (cap->CapsuleImageSize < sizeof(EFI_CAPSULE_HEADER) ||
-			    cap->CapsuleImageSize > fsize);
-	assert(rejected == TRUE);
+	assert(EFI_ERROR(fwup_validate_capsule_size(cap, fsize)));
 }
 
 static void
 test_capsule_file_too_small(void)
 {
 	UINTN fsize = sizeof(EFI_CAPSULE_HEADER) - 1;
-	BOOLEAN rejected = (fsize < sizeof(EFI_CAPSULE_HEADER));
-	assert(rejected == TRUE);
+	_cleanup_free UINT8 *fbuf = calloc(1, sizeof(EFI_CAPSULE_HEADER));
+	EFI_CAPSULE_HEADER *cap = (EFI_CAPSULE_HEADER *)fbuf;
+	cap->CapsuleImageSize = sizeof(EFI_CAPSULE_HEADER);
+
+	assert(EFI_ERROR(fwup_validate_capsule_size(cap, fsize)));
 }
 
 static void
@@ -547,10 +542,7 @@ test_capsule_image_size_valid(void)
 	EFI_CAPSULE_HEADER *cap = (EFI_CAPSULE_HEADER *)fbuf;
 	cap->CapsuleImageSize = (UINT32)fsize;
 
-	BOOLEAN ok = (fsize >= sizeof(EFI_CAPSULE_HEADER) &&
-		      cap->CapsuleImageSize >= sizeof(EFI_CAPSULE_HEADER) &&
-		      cap->CapsuleImageSize <= fsize);
-	assert(ok == TRUE);
+	assert(!EFI_ERROR(fwup_validate_capsule_size(cap, fsize)));
 }
 
 /* ================================================================
@@ -657,8 +649,7 @@ test_cbd_terminator_position(void)
 
 	/* the fix places terminator at cbd[n_updates] where n_updates=j=2 */
 	UINTN n_updates = 2;
-	cbd[n_updates].Length = 0;
-	cbd[n_updates].Union.ContinuationPointer = 0;
+	fwup_cbd_set_terminator(cbd, n_updates);
 
 	assert(cbd[2].Length == 0);
 	assert(cbd[2].Union.ContinuationPointer == 0);
@@ -683,6 +674,7 @@ main(void)
 	RUN_TEST(test_dp_size_node_exceeds_limit);
 	RUN_TEST(test_dp_size_exact_fit);
 	RUN_TEST(test_dp_size_zero_limit);
+	RUN_TEST(test_dp_size_zero_length_node);
 
 	printf("UX capsule checksum:\n");
 	RUN_TEST(test_checksum_zeroes);
