@@ -54,7 +54,7 @@ fwup_dp_size(EFI_DEVICE_PATH *dp, INTN limit)
 		if (limit < 4)
 			break;
 		INTN nodelen = DevicePathNodeLength(dp);
-		if (nodelen > limit)
+		if (nodelen < 4 || nodelen > limit)
 			break;
 		limit -= nodelen;
 		ret += nodelen;
