@@ -114,28 +114,47 @@ cmd = run_command(
   '--cc', ' '.join(cc.cmd_array()),
   '--objcopy', objcopy,
   '--target', efi_app_target,
+  '--lds', efi_ldsdir / arch_lds,
+  '--crt0', efi_ldsdir / arch_crt,
   check: false,
 )
-
-message('stdout:', cmd.stdout())
-message('stderr:', cmd.stderr())
-message('exit code:', cmd.returncode())
-
 have_objcopy_efi = cmd.returncode() == 0
 message('objcopy @0@: @1@'.format(efi_app_target, have_objcopy_efi))
+
+local_crt = false
+local_lds = false
 
 if have_objcopy_efi
   objcopy_manualsymbols = false
   generate_binary_extra = []
+  efi_format = ['--output-target=@0@'.format(efi_app_target)]
 else
   # Use 'binary' instead, and add required symbols manually.
   objcopy_manualsymbols = true
   generate_binary_extra = ['--objcopy-manualsymbols']
+  efi_format = ['-O', 'binary']
+
+  # probe if crt0 provides pe-header
+  cmd = run_command(
+    probe_objcopy_efi,
+    '--cc', ' '.join(cc.cmd_array()),
+    '--objcopy', objcopy,
+    '--target', 'binary',
+    '--lds', efi_ldsdir / arch_lds,
+    '--crt0', efi_ldsdir / arch_crt,
+    check: false,
+  )
+  have_crt0_pefile = cmd.returncode() == 0
+  message('@0@ pefile: @1@'.format(arch_crt, have_crt0_pefile))
+
+  if not have_crt0_pefile
+    warning('Switching to local copy of crt0 for pefile')
+    local_crt = true
+    local_lds = true
+  endif
+
 endif
 
-# do we need local crt or lds?
-local_crt = false
-local_lds = false
 
 # is the system linker script new enough to know about SBAT?
 # i.e. gnu-efi with https://github.com/vathpela/gnu-efi/pull/14 has been installed
@@ -193,7 +212,8 @@ if not objcopy_manualsymbols and local_lds
   endif
 endif
 
-
+message('efi-crt: @0@'.format(arch_crt))
+message('efi-lds: @0@'.format(arch_lds))
 message('efi-libdir: "@0@"'.format(efi_libdir))
 message('efi-ldsdir: "@0@"'.format(efi_ldsdir))
 message('efi-crtdir: "@0@"'.format(efi_crtdir))
@@ -265,16 +285,9 @@ if host_cpu == 'aarch64' or host_cpu == 'arm'
   efi_ldflags += ['-z', 'max-page-size=4096']
 endif
 
-if objcopy_manualsymbols
-  # older objcopy for Aarch64, ARM32 and RISC-V are not EFI capable.
-  # Use 'binary' instead, and add required symbols manually.
-  if efi_crtdir != join_paths(meson.current_build_dir(), 'crt0')
-    # Using system so without crt0 generator
+# Using system so without crt0 generator
+if objcopy_manualsymbols and not local_crt
     efi_ldflags += ['--defsym=EFI_SUBSYSTEM=0xa']
-  endif
-  efi_format = ['-O', 'binary']
-else
-  efi_format = ['--output-target=@0@'.format(efi_app_target)]
 endif
 
 libgcc_file_name = run_command(cc.cmd_array(), '-print-libgcc-file-name', check: true).stdout().strip()
