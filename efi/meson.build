@@ -185,10 +185,11 @@ if local_lds
   arch_lds   = arch_lds_local
 endif
 
-# Check aligned lds and crt0 on ARM64 this breaks otherwise
-if host_cpu == 'aarch64' and not objcopy_manualsymbols
-  if efi_ldsdir == join_paths(meson.current_source_dir(), 'lds')
-      arch_lds = arch_lds_system
+# Check system aligned lds and crt0
+if not objcopy_manualsymbols and local_lds
+  cmd = run_command('test', '-f', join_paths(efi_ldsdir, arch_lds_system), check: false)
+  if cmd.returncode() == 0
+    arch_lds = arch_lds_system
   endif
 endif
 
