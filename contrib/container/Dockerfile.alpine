@@ -1,0 +1,24 @@
+# syntax=docker/dockerfile:1.17
+
+ARG ALPINE_VERSION
+ARG ALPINE_ARCH
+
+FROM scratch AS root
+ARG ALPINE_VERSION
+ARG ALPINE_ARCH
+# alpine does not publish loong64 images on docker.io
+ADD --unpack=true https://dl-cdn.alpinelinux.org/alpine/latest-stable/releases/${ALPINE_ARCH}/alpine-minirootfs-${ALPINE_VERSION}-${ALPINE_ARCH}.tar.gz /
+COPY --chmod=0755 pkgdeps.sh /usr/local/bin/pkgdeps.sh
+CMD ["/bin/sh"]
+
+FROM root AS base
+RUN /usr/local/bin/pkgdeps.sh "base gnuefi py3pe"
+LABEL org.opencontainers.image.title="alpine"
+
+FROM base AS gnu
+RUN /usr/local/bin/pkgdeps.sh "gnu"
+LABEL org.opencontainers.image.title="alpine-gnu"
+
+FROM base AS llvm
+RUN /usr/local/bin/pkgdeps.sh "llvm"
+LABEL org.opencontainers.image.title="alpine-llvm"
