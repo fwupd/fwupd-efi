@@ -22,7 +22,8 @@ SECTIONS
   _text_size = _etext - _text;
   . = ALIGN(4096);
   _reloc = .;
-  .reloc : {
+  .reloc :
+  {
     *(.reloc)
     _evreloc = .;
     . = ALIGN(4096);
@@ -115,7 +116,7 @@ SECTIONS
   } =0
   _rodata_vsize = _evrodata - _rodata;
   _rodata_size = _erodata - _rodata;
-/*
+  /*
    * Note that _sbat must be the beginning of the data, and _esbat must be the
    * end and must be before any section padding.  The sbat self-check uses
    * _esbat to find the bounds of the data, and if the padding is included, the
@@ -170,4 +171,3 @@ SECTIONS
   }
   .comment 0 : { *(.comment) }
 }
-

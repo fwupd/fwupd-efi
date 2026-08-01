@@ -19,7 +19,8 @@ SECTIONS
   _text_size = _etext - _text;
   . = ALIGN(4096);
   _reloc = .;
-  .areloc : {
+  .areloc :
+  {
     *(.areloc)
     _evreloc = .;
     . = ALIGN(4096);
