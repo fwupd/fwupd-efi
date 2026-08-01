@@ -1,5 +1,6 @@
 generate_sbat = [python3, files('generate_sbat.py')]
 generate_binary = [python3, files('generate_binary.py')]
+probe_objcopy_efi = [python3, files('probe-objcopy-efi.py')]
 
 # get source version, falling back
 git = find_program('git', required : false)
@@ -100,17 +101,33 @@ else
         coff_header_in_crt0 = false
 endif
 
-# older objcopy for Aarch64, ARM32 and RISC-V are not EFI capable.
-# Use 'binary' instead, and add required symbols manually.
-if ( host_cpu == 'arm'
-  or (host_cpu == 'riscv64'     and (objcopy_version.version_compare ('< 2.42') or coff_header_in_crt0))
-  or (host_cpu == 'aarch64'     and (objcopy_version.version_compare ('< 2.38') or coff_header_in_crt0 or uswid.found()))
-  or (host_cpu == 'loongarch64' and (objcopy_version.version_compare ('< 2.41') or coff_header_in_crt0)) )
-  objcopy_manualsymbols = true
-  generate_binary_extra = ['--objcopy-manualsymbols']
-else
+# older gnu-objcopy for Aarch64, ARM32 and RISC-V are not EFI capable.
+# llvm-objcopy is not EFI capable (https://github.com/llvm/llvm-project/issues/108609)
+efi_app_target = 'efi-app-@0@'.format(gnu_efi_arch)
+
+# probe if objcopy supports efi-app
+cmd = run_command(
+  probe_objcopy_efi,
+  '--cc', ' '.join(cc.cmd_array()),
+  '--objcopy', objcopy,
+  '--target', efi_app_target,
+  check: false,
+)
+
+message('stdout:', cmd.stdout())
+message('stderr:', cmd.stderr())
+message('exit code:', cmd.returncode())
+
+have_objcopy_efi = cmd.returncode() == 0
+message('objcopy @0@: @1@'.format(efi_app_target, have_objcopy_efi))
+
+if have_objcopy_efi
   objcopy_manualsymbols = false
   generate_binary_extra = []
+else
+  # Use 'binary' instead, and add required symbols manually.
+  objcopy_manualsymbols = true
+  generate_binary_extra = ['--objcopy-manualsymbols']
 endif
 
 # is the system linker script new enough to know about SBAT?
@@ -242,7 +259,7 @@ if objcopy_manualsymbols
   endif
   efi_format = ['-O', 'binary']
 else
-  efi_format = ['--output-target=efi-app-@0@'.format(gnu_efi_arch)]
+  efi_format = ['--output-target=@0@'.format(efi_app_target)]
 endif
 
 libgcc_file_name = run_command(cc.cmd_array(), '-print-libgcc-file-name', check: true).stdout().strip()
