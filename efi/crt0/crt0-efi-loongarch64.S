@@ -196,7 +196,7 @@ _start:
 0:	ld.d	  $ra, $sp, 0
 	addi.d	  $sp, $sp, 24
 	jr        $ra
-	.end	  _start
+
 // hand-craft a dummy .reloc section so EFI knows it's a relocatable executable:
 
  	.data
