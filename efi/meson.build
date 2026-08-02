@@ -291,7 +291,9 @@ if objcopy_manualsymbols and not local_crt
     efi_ldflags += ['--defsym=EFI_SUBSYSTEM=0xa']
 endif
 
-libgcc_file_name = run_command(cc.cmd_array(), '-print-libgcc-file-name', check: true).stdout().strip()
+libgcc_file_name = run_command(cc.cmd_array(), get_option('c_link_args'),
+                               '-print-libgcc-file-name', check: true).stdout().strip()
+message('libgcc_file_name:', libgcc_file_name)
 efi_name = 'fwupd@0@.efi'.format(EFI_MACHINE_TYPE_NAME)
 
 # GNU-EFI 4.0 changed how CompareGuid works (to align with EDK2)
