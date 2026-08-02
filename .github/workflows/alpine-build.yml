@@ -1,0 +1,144 @@
+name: Continuous Integration - Architectures
+
+on:
+  workflow_call:
+
+permissions:
+  contents: read
+  packages: write
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_BASE: ghcr.io/${{ github.repository }}-alpine
+
+jobs:
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      image_inputs: ${{ steps.filter.outputs.image_inputs }}
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: dorny/paths-filter@v4
+        id: filter
+        with:
+          filters: |
+            image_inputs:
+              - 'contrib/container/Dockerfile.alpine'
+              - 'contrib/container/pkgdebs.sh'
+              - '.github/workflows/alpine-images.yml'
+              - '.github/workflows/alpine-image-target.yml'
+
+  alpine-images:
+    needs: changes
+    if: needs.changes.outputs.image_inputs == 'true'
+    uses: ./.github/workflows/alpine-images.yml
+    with:
+      alpine_version: "3.24.1"
+
+  build:
+    needs:
+      - changes
+      - alpine-images
+
+    # Run after images succeeded, or immediately when images were skipped.
+    if: >-
+      ${{
+        !cancelled() &&
+        needs.changes.result == 'success' &&
+        (
+          needs.alpine-images.result == 'success' ||
+          needs.alpine-images.result == 'skipped'
+        )
+      }}
+
+    runs-on: ubuntu-latest
+    name: ${{ matrix.target }} / ${{ matrix.arch.name }}
+
+    continue-on-error: ${{ matrix.allow_failure || false }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        target:
+          - gnu
+          - llvm
+
+        arch:
+          - name: x86_64
+            platform: linux/amd64
+
+          - name: i686
+            platform: linux/386
+
+          - name: arm
+            platform: linux/arm/v7
+
+          - name: arm64
+            platform: linux/arm64
+
+          - name: riscv64
+            platform: linux/riscv64
+
+          - name: loong64
+            platform: linux/loong64
+
+        include:
+
+          # /usr/bin/ld.bfd: BFD (GNU Binutils) 2.45.1 
+          # assertion fail /home/buildozer/aports/main/binutils/src/binutils-2.45.1/bfd/elfnn-loongarch.c:4119
+          - target: gnu
+            arch:
+              name: loong64
+              platform: linux/loong64
+            allow_failure: true
+    
+          # ld.lld: error: internal linker error: cannot read addend for relocation R_ARM_ABS16
+          - target: llvm
+            arch:
+              name: arm
+              platform: linux/arm/v7
+            allow_failure: true
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v4
+        with:
+          platforms: all
+
+      # Remove this step when the images are public.
+      - name: Log in to GHCR
+        uses: docker/login-action@v4
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build in container
+        env:
+          IMAGE: ${{ env.IMAGE_BASE }}-${{ matrix.target }}
+          PLATFORM: ${{ matrix.arch.platform }}
+        run: |
+          set -eu
+          echo $GITHUB_WORKSPACE
+
+          PERSONALITY=""
+          case "${{ matrix.arch.name }}" in
+              i686|arm) PERSONALITY="--personality=LINUX32" ;;
+          esac
+
+          echo "$(uname -m)/${{ matrix.arch.name }} $PERSONALITY"
+
+          podman run --rm \
+            --platform "$PLATFORM" \
+            $PERSONALITY \
+            --volume "$GITHUB_WORKSPACE:/workspace" \
+            --workdir /workspace \
+            --env CI=true \
+            --env TARGET=${{ matrix.target }} \
+            "$IMAGE" \
+            ./contrib/ci_build.sh

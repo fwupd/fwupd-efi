@@ -1,0 +1,189 @@
+name: Build Alpine CI image target
+
+on:
+  workflow_call:
+    inputs:
+      alpine_version:
+        description: Alpine minirootfs version
+        required: true
+        type: string
+
+      target:
+        description: Dockerfile build target
+        required: true
+        type: string
+
+permissions:
+  contents: read
+  packages: write
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_BASE: ghcr.io/${{ github.repository }}-alpine
+  ALPINE_VERSION: ${{ inputs.alpine_version }}
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    name: Build ${{ inputs.target }} / ${{ matrix.arch.name }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        arch:
+          - name: x86_64
+            id: amd64
+            platform: linux/amd64
+            alpine_arch: x86_64
+
+          - name: i686
+            id: i686
+            platform: linux/386
+            alpine_arch: x86
+
+          - name: arm
+            id: armv7
+            platform: linux/arm/v7
+            alpine_arch: armv7
+
+          - name: arm64
+            id: arm64
+            platform: linux/arm64
+            alpine_arch: aarch64
+
+          - name: riscv64
+            id: riscv64
+            platform: linux/riscv64
+            alpine_arch: riscv64
+
+          - name: loong64
+            id: loong64
+            platform: linux/loong64
+            alpine_arch: loongarch64
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v4
+        with:
+          platforms: all
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v4
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push architecture digest
+        shell: bash
+        env:
+          TARGET: ${{ inputs.target }}
+        run: |
+          set -euo pipefail
+
+          digest_root="${RUNNER_TEMP}/digests"
+          metadata_root="${RUNNER_TEMP}/metadata"
+
+          mkdir -p "${digest_root}" "${metadata_root}"
+
+          image="${IMAGE_BASE}-${TARGET}"
+          metadata="${metadata_root}/${TARGET}.json"
+
+          docker buildx build \
+            --file ./contrib/container/Dockerfile.alpine \
+            --target "${TARGET}" \
+            --platform "${{ matrix.arch.platform }}" \
+            --build-arg "ALPINE_VERSION=${ALPINE_VERSION}" \
+            --build-arg "ALPINE_ARCH=${{ matrix.arch.alpine_arch }}" \
+            --output "type=image,name=${image},push-by-digest=true,name-canonical=true,push=true" \
+            --metadata-file "${metadata}" \
+            --provenance=false \
+            ./contrib/container
+
+          digest="$(jq -r '."containerimage.digest"' "${metadata}")"
+
+          if [[ -z "${digest}" || "${digest}" == "null" ]]; then
+            echo "Build did not return an image digest for ${TARGET}" >&2
+            cat "${metadata}" >&2
+            exit 1
+          fi
+
+          mkdir -p "${digest_root}/${TARGET}"
+          touch "${digest_root}/${TARGET}/${digest#sha256:}"
+
+          echo "${TARGET}: ${image}@${digest}"
+
+      - name: Upload image digest
+        uses: actions/upload-artifact@v7
+        with:
+          name: digests-${{ inputs.target }}-${{ matrix.arch.id }}
+          path: ${{ runner.temp }}/digests
+          if-no-files-found: error
+          retention-days: 1
+
+  merge:
+    runs-on: ubuntu-latest
+    name: Publish ${{ inputs.target }}
+    needs: build
+
+    steps:
+      - name: Download architecture digests
+        uses: actions/download-artifact@v8
+        with:
+          pattern: digests-${{ inputs.target }}-*
+          path: ${{ runner.temp }}/digests
+          merge-multiple: true
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v4
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Create multi-architecture manifest
+        env:
+          IMAGE: ${{ env.IMAGE_BASE }}-${{ inputs.target }}
+          DIGEST_DIRECTORY: ${{ runner.temp }}/digests/${{ inputs.target }}
+        run: |
+          set -euo pipefail
+
+          mapfile -t digests < <(
+            find "${DIGEST_DIRECTORY}" \
+              -maxdepth 1 \
+              -type f \
+              -printf '%f\n' |
+            sort
+          )
+
+          if [[ "${#digests[@]}" -ne 6 ]]; then
+            echo "Expected 6 architecture digests, found ${#digests[@]}" >&2
+            printf 'Digest: %s\n' "${digests[@]}" >&2
+            exit 1
+          fi
+
+          references=()
+
+          for digest in "${digests[@]}"; do
+            references+=("${IMAGE}@sha256:${digest}")
+          done
+
+          docker buildx imagetools create \
+            --tag "${IMAGE}:${ALPINE_VERSION}" \
+            --tag "${IMAGE}:latest" \
+            "${references[@]}"
+
+      - name: Inspect published manifest
+        env:
+          IMAGE: ${{ env.IMAGE_BASE }}-${{ inputs.target }}
+        run: |
+          docker buildx imagetools inspect "${IMAGE}:${ALPINE_VERSION}"

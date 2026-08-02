@@ -1,0 +1,32 @@
+name: Continuous Integration - Distros
+
+on:
+  workflow_call:
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - arch-amd64
+          - debian-amd64
+          - debian-amd64-i386
+          - fedora-amd64
+    steps:
+      - uses: actions/checkout@v6.0.2
+      - name: Docker login
+        run: docker login docker.pkg.github.com -u $GITHUB_ACTOR -p $GITHUB_TOKEN
+        env:
+          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+      - name: Build in container
+        env:
+          CI_NETWORK: true
+        run: |
+          echo $GITHUB_WORKSPACE
+          docker run --privileged -e CI=true -t -v $GITHUB_WORKSPACE:/github/workspace "ghcr.io/fwupd/fwupd/fwupd-${{ matrix.os }}:latest" ./contrib/ci.sh

@@ -1,0 +1,50 @@
+name: Continuous Integration - Legacy
+# check if binutils without efi-app support works
+
+on:
+  workflow_call:
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    name: Binutils 2.38
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v4
+        with:
+          platforms: riscv64
+
+      - name: Build in container
+        uses: uraimo/run-on-arch-action@v3
+        with:
+          arch: riscv64
+          distro: ubuntu22.04
+          githubToken: ${{ github.token }}
+          dockerRunArgs: |
+            --volume "${PWD}:/workspace"
+            --workdir /workspace
+          install: |
+            apt-get update
+            DEBIAN_FRONTEND=noninteractive apt-get install -y \
+              build-essential \
+              meson \
+              pkg-config \
+              python3-pefile \
+              wget
+            wget https://old-releases.ubuntu.com/ubuntu/pool/main/g/gnu-efi/gnu-efi_3.0.18-1_riscv64.deb
+            apt install -y ./gnu-efi_3.0.18-1_riscv64.deb
+          run: |
+            set -euo pipefail
+
+            echo "Running on: $(uname -m)"
+            objcopy --version | head -n 1
+
+            ./contrib/ci_build.sh

@@ -1,5 +1,6 @@
 generate_sbat = [python3, files('generate_sbat.py')]
 generate_binary = [python3, files('generate_binary.py')]
+probe_objcopy_efi = [python3, files('probe-objcopy-efi.py')]
 
 # get source version, falling back
 git = find_program('git', required : false)
@@ -37,12 +38,29 @@ endif
 
 efi_libdir = get_option('efi-libdir')
 if efi_libdir == ''
-  multi = run_command(cc.cmd_array(), '-print-multi-os-directory', check: true).stdout().strip()
-  efi_libdir = join_paths('/usr/lib/', multi)
-  if not fs.is_dir(join_paths(efi_libdir, 'gnuefi'))
-    efi_libdir = gnuefi.get_variable('libdir', default_value: '/usr/lib')
+  efi_libdir_default = '/usr/lib'
+  multi_result = run_command(
+    cc.cmd_array(),
+    '-print-multi-os-directory',
+    check: false,
+  )
+  if multi_result.returncode() == 0
+    multi = multi_result.stdout().strip()
+    if multi != ''
+      efi_libdir_multi = join_paths(efi_libdir_default, multi)
+      if (fs.is_dir(join_paths(efi_libdir_multi, 'gnuefi')) or
+          fs.is_file(join_paths(efi_libdir_multi, 'libgnuefi.a')) )
+        efi_libdir = efi_libdir_multi
+      else
+        efi_libdir = gnuefi.get_variable('libdir', default_value: efi_libdir_default)
+      endif
+    endif
+  else
+    warning('Compiler does not support -print-multi-os-directory, using default efi-libdir path')
+    efi_libdir = efi_libdir_default
   endif
 endif
+message('efi_libdir:', efi_libdir)
 
 # The name we need to look for on this arch and OS: elf_x86_64_fbsd_efi.lds
 lds_os = ''
@@ -52,27 +70,30 @@ endif
 
 arch_lds = 'efi.lds'
 arch_crt = 'crt0.o'
+arch_lds_efi    = 'elf_@0@@1@_efi.lds'.format(gnu_efi_path_arch, lds_os)
+arch_lds_local  = 'elf_@0@@1@_efi.lds'.format(gnu_efi_arch, lds_os)
+arch_lds_system = 'elf_@0@@1@_efi_system.lds'.format(gnu_efi_arch, lds_os)
+arch_crt_efi    = 'crt0-efi-@0@.o'.format(gnu_efi_path_arch)
+arch_crt_local  = 'crt0-efi-@0@.o'.format(gnu_efi_arch)
+
 if efi_ldsdir == ''
   efi_ldsdir = join_paths(efi_libdir, 'gnuefi', gnu_efi_path_arch)
   if not fs.is_file(efi_ldsdir / arch_lds)
-    arch_lds = 'elf_@0@@1@_efi.lds'.format(gnu_efi_path_arch, lds_os)
-    arch_crt = 'crt0-efi-@0@.o'.format(gnu_efi_path_arch)
+    arch_lds = arch_lds_efi
+    arch_crt = arch_crt_efi
     efi_ldsdir = join_paths(efi_libdir, 'gnuefi')
   endif
   if not fs.is_file(efi_ldsdir / arch_lds)
     efi_ldsdir = efi_libdir
-    if not fs.is_file(efi_ldsdir / arch_lds)
-      error('Cannot find @0@'.format(arch_lds))
-    endif
   endif
 else
   if not fs.is_file(efi_ldsdir / arch_lds)
-    arch_lds = 'elf_@0@@1@_efi.lds'.format(gnu_efi_path_arch, lds_os)
-    arch_crt = 'crt0-efi-@0@.o'.format(gnu_efi_path_arch)
+    arch_lds = arch_lds_efi
+    arch_crt = arch_crt_efi
   endif
-  if not fs.is_file(efi_ldsdir / arch_lds)
-    error('Cannot find @0@'.format(arch_lds))
-  endif
+endif
+if not fs.is_file(efi_ldsdir / arch_lds)
+  error('Cannot find @0@'.format(arch_lds))
 endif
 efi_crtdir = efi_ldsdir
 
@@ -83,18 +104,57 @@ else
         coff_header_in_crt0 = false
 endif
 
-# older objcopy for Aarch64, ARM32 and RISC-V are not EFI capable.
-# Use 'binary' instead, and add required symbols manually.
-if ( host_cpu == 'arm'
-  or (host_cpu == 'riscv64'     and (objcopy_version.version_compare ('< 2.42') or coff_header_in_crt0))
-  or (host_cpu == 'aarch64'     and (objcopy_version.version_compare ('< 2.38') or coff_header_in_crt0 or uswid.found()))
-  or (host_cpu == 'loongarch64' and (objcopy_version.version_compare ('< 2.41') or coff_header_in_crt0)) )
-  objcopy_manualsymbols = true
-  generate_binary_extra = ['--objcopy-manualsymbols']
-else
+# older gnu-objcopy for Aarch64, ARM32 and RISC-V are not EFI capable.
+# llvm-objcopy is not EFI capable (https://github.com/llvm/llvm-project/issues/108609)
+efi_app_target = 'efi-app-@0@'.format(gnu_efi_arch)
+
+# probe if objcopy supports efi-app
+cmd = run_command(
+  probe_objcopy_efi,
+  '--cc', ' '.join(cc.cmd_array()),
+  '--objcopy', objcopy,
+  '--target', efi_app_target,
+  '--lds', efi_ldsdir / arch_lds,
+  '--crt0', efi_ldsdir / arch_crt,
+  check: false,
+)
+have_objcopy_efi = cmd.returncode() == 0
+message('objcopy @0@: @1@'.format(efi_app_target, have_objcopy_efi))
+
+local_crt = false
+local_lds = false
+
+if have_objcopy_efi
   objcopy_manualsymbols = false
   generate_binary_extra = []
+  efi_format = ['--output-target=@0@'.format(efi_app_target)]
+else
+  # Use 'binary' instead, and add required symbols manually.
+  objcopy_manualsymbols = true
+  generate_binary_extra = ['--objcopy-manualsymbols']
+  efi_format = ['-O', 'binary']
+
+  # probe if crt0 provides pe-header
+  cmd = run_command(
+    probe_objcopy_efi,
+    '--cc', ' '.join(cc.cmd_array()),
+    '--objcopy', objcopy,
+    '--target', 'binary',
+    '--lds', efi_ldsdir / arch_lds,
+    '--crt0', efi_ldsdir / arch_crt,
+    check: false,
+  )
+  have_crt0_pefile = cmd.returncode() == 0
+  message('@0@ pefile: @1@'.format(arch_crt, have_crt0_pefile))
+
+  if not have_crt0_pefile
+    warning('Switching to local copy of crt0 for pefile')
+    local_crt = true
+    local_lds = true
+  endif
+
 endif
+
 
 # is the system linker script new enough to know about SBAT?
 # i.e. gnu-efi with https://github.com/vathpela/gnu-efi/pull/14 has been installed
@@ -102,16 +162,14 @@ if get_option('efi_sbat_distro_id') != ''
   cmd = run_command('grep', '-q', 'sbat', join_paths(efi_ldsdir, arch_lds), check: false)
   if cmd.returncode() != 0
     warning('Cannot find SBAT section in @0@, using local copy'.format(join_paths(efi_ldsdir, arch_lds)))
-    efi_ldsdir = join_paths(meson.current_source_dir(), 'lds')
-    arch_lds = 'elf_@0@@1@_efi.lds'.format(gnu_efi_arch, lds_os)
+    local_lds = true
   endif
 endif
 
 # SBOM is never in system lds
 if uswid.found()
   warning('Switching to local copy of linker script as using SBOM')
-  efi_ldsdir = join_paths(meson.current_source_dir(), 'lds')
-  arch_lds = 'elf_@0@@1@_efi.lds'.format(gnu_efi_arch, lds_os)
+  local_lds = true
 endif
 
 # is the system crt0 for arm and aarch64 new enough to know about SBAT?
@@ -122,8 +180,8 @@ if objcopy_manualsymbols
       warning('Cannot find SBAT section in @0@, using local copy'.format(join_paths(efi_crtdir, arch_crt)))
       # The gnuefi libraries are still needed
       efi_libdir = efi_crtdir
-      efi_crtdir = join_paths(meson.current_build_dir(), 'crt0')
-      efi_ldsdir = join_paths(meson.current_source_dir(), 'lds')
+      local_crt = true
+      local_lds = true
     endif
   endif
 endif
@@ -132,19 +190,30 @@ endif
 if objcopy_manualsymbols
   if uswid.found()
     warning('Switching to local copy of crt0 as using SBOM')
-    efi_crtdir = join_paths(meson.current_build_dir(), 'crt0')
-    efi_ldsdir = join_paths(meson.current_source_dir(), 'lds')
+    local_crt = true
+    local_lds = true
   endif
 endif
 
-# Check aligned lds and crt0 on ARM64 this breaks otherwise
-if host_cpu == 'aarch64' and not objcopy_manualsymbols
-  if efi_ldsdir == join_paths(meson.current_source_dir(), 'lds')
-      arch_lds = 'elf_@0@@1@_efi_system.lds'.format(gnu_efi_arch, lds_os)
+if local_crt
+  efi_crtdir = join_paths(meson.current_build_dir(), 'crt0')
+  arch_crt   = arch_crt_local
+endif
+if local_lds
+  efi_ldsdir = join_paths(meson.current_source_dir(), 'lds')
+  arch_lds   = arch_lds_local
+endif
+
+# Check system aligned lds and crt0
+if not objcopy_manualsymbols and local_lds
+  cmd = run_command('test', '-f', join_paths(efi_ldsdir, arch_lds_system), check: false)
+  if cmd.returncode() == 0
+    arch_lds = arch_lds_system
   endif
 endif
 
-
+message('efi-crt: @0@'.format(arch_crt))
+message('efi-lds: @0@'.format(arch_lds))
 message('efi-libdir: "@0@"'.format(efi_libdir))
 message('efi-ldsdir: "@0@"'.format(efi_ldsdir))
 message('efi-crtdir: "@0@"'.format(efi_crtdir))
@@ -159,8 +228,8 @@ compile_args = ['-Og',
                 '-Wextra',
                 '-Wvla',
                 '-std=gnu11',
-                '-fpic',
                 '-fno-pie',
+                '-fPIC',
                 '-funsigned-char',
                 '-fshort-wchar',
                 '-ffreestanding',
@@ -191,6 +260,7 @@ elif host_cpu == 'x86'
   compile_args += ['-mno-sse',
                    '-mno-mmx',
                    '-mno-red-zone',
+                   '-mfpmath=387',
                    '-m32']
 elif host_cpu == 'loongarch64'
   compile_args += ['-mno-lsx',
@@ -216,19 +286,14 @@ if host_cpu == 'aarch64' or host_cpu == 'arm'
   efi_ldflags += ['-z', 'max-page-size=4096']
 endif
 
-if objcopy_manualsymbols
-  # older objcopy for Aarch64, ARM32 and RISC-V are not EFI capable.
-  # Use 'binary' instead, and add required symbols manually.
-  if efi_crtdir != join_paths(meson.current_build_dir(), 'crt0')
-    # Using system so without crt0 generator
+# Using system so without crt0 generator
+if objcopy_manualsymbols and not local_crt
     efi_ldflags += ['--defsym=EFI_SUBSYSTEM=0xa']
-  endif
-  efi_format = ['-O', 'binary']
-else
-  efi_format = ['--output-target=efi-app-@0@'.format(gnu_efi_arch)]
 endif
 
-libgcc_file_name = run_command(cc.cmd_array(), '-print-libgcc-file-name', check: true).stdout().strip()
+libgcc_file_name = run_command(cc.cmd_array(), get_option('c_link_args'),
+                               '-print-libgcc-file-name', check: true).stdout().strip()
+message('libgcc_file_name:', libgcc_file_name)
 efi_name = 'fwupd@0@.efi'.format(EFI_MACHINE_TYPE_NAME)
 
 # GNU-EFI 4.0 changed how CompareGuid works (to align with EDK2)

@@ -40,7 +40,7 @@ SECTIONS
    *(.data.*)
    *(.got.plt)
    *(.got)
-   
+
    /*
     * Note that these aren't the using the GNU "CONSTRUCTOR" output section
     * command, so they don't start with a size.  Because of p2align and the
