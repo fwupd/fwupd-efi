@@ -260,6 +260,7 @@ elif host_cpu == 'x86'
   compile_args += ['-mno-sse',
                    '-mno-mmx',
                    '-mno-red-zone',
+                   '-mfpmath=387',
                    '-m32']
 elif host_cpu == 'loongarch64'
   compile_args += ['-mno-lsx',
