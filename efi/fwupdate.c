@@ -537,43 +537,21 @@ fwup_set_update_statuses(FWUP_UPDATE_TABLE **updates)
 	return EFI_SUCCESS;
 }
 
-EFI_GUID SHIM_LOCK_GUID =
- {0x605dab50,0xe046,0x4300,{0xab,0xb6,0x3d,0xd8,0x10,0xdd,0x8b,0x23}};
-
 static VOID
 EFI_OPTNONE
 fwup_debug_hook(VOID)
 {
-	EFI_GUID guid = SHIM_LOCK_GUID;
-	UINTN data = 0;
-	UINTN data_size = 1;
-	EFI_STATUS efi_status;
+	EFI_STATUS rc;
 	UINT32 attrs;
-	register volatile int x = 0;
-	extern char _text UNUSED, _data UNUSED;
+	UINT8 data = 0;
+	UINTN data_size = sizeof(data);
 
-	/* shim has done whatever is needed to get a debugger attached */
-	efi_status = uefi_call_wrapper(RT->GetVariable, 5, L"SHIM_DEBUG",
-				       &guid, &attrs,  &data_size, &data);
-	if (EFI_ERROR(efi_status) || data != 1) {
-		efi_status = uefi_call_wrapper(RT->GetVariable, 5,
-					       L"FWUPDATE_VERBOSE",
-					       &fwupdate_guid, &attrs,
-					       &data_size, &data);
-		if (EFI_ERROR(efi_status) || data != 1)
-			return;
+	rc = uefi_call_wrapper(RT->GetVariable, 5,
+			       L"FWUPDATE_VERBOSE",
+			       &fwupdate_guid, &attrs,
+			       &data_size, &data);
+	if (rc == EFI_SUCCESS && data > 0)
 		fwup_debug_set_enabled(TRUE);
-		return;
-	}
-
-	fwup_debug_set_enabled(TRUE);
-	if (x)
-		return;
-
-	x = 1;
-	fwup_info(L"add-symbol-file "DEBUGDIR
-		  L"fwupdate.efi.debug %p -s .data %p",
-		  &_text, &_data);
 }
 
 EFI_STATUS
@@ -586,7 +564,6 @@ efi_main(EFI_HANDLE image, EFI_SYSTEM_TABLE *systab)
 
 	InitializeLib(image, systab);
 
-	/* if SHIM_DEBUG is set, print info for our attached debugger */
 	fwup_debug_hook();
 
 	/* show the version to screen */

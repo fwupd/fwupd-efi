@@ -17,10 +17,6 @@ static EFI_RUNTIME_SERVICES mock_rt;
 EFI_BOOT_SERVICES *BS = &mock_bs;
 EFI_RUNTIME_SERVICES *RT = &mock_rt;
 
-/* linker symbols referenced by fwup_debug_hook */
-char UNUSED _text = 0;
-char UNUSED _data = 0;
-
 /* include the real source -- makes static functions visible */
 #include "fwup-debug.c"
 #include "fwup-efi.c"
