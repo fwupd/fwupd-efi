@@ -6,7 +6,7 @@
   "metadata": {
     "authors": [
       {
-        "name": "Richard Hughes"
+      "name": "@VCS_AUTHORS@"
       }
     ],
     "lifecycles": {
@@ -40,10 +40,7 @@
       ],
       "authors": [
         {
-          "name": "Richard Hughes",
-          "url": [
-            "hughsie.com"
-          ]
+          "name": "@VCS_AUTHORS@"
         }
       ],
       "properties": [
