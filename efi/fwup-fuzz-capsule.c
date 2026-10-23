@@ -35,6 +35,7 @@ LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
 	memset(&mock_bs, 0, sizeof(mock_bs));
 	memset(&mock_rt, 0, sizeof(mock_rt));
 
+	mock_bs.Exit = mock_exit;
 	mock_bs.Stall = mock_stall;
 	mock_bs.AllocatePages = mock_allocate_pages;
 	mock_bs.FreePages = mock_free_pages;

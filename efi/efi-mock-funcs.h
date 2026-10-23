@@ -24,6 +24,13 @@ EFI_RUNTIME_SERVICES *RT = &mock_rt;
 #include "fwupdate.c"
 
 static EFI_STATUS
+mock_exit(EFI_HANDLE image_handle, EFI_STATUS exit_status,
+	  UINTN exit_data_size, CHAR16 *exit_data)
+{
+	exit(exit_status);
+}
+
+static EFI_STATUS
 mock_stall(UINTN microseconds)
 {
 	return EFI_SUCCESS;

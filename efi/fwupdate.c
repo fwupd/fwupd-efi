@@ -555,16 +555,12 @@ fwup_debug_hook(VOID)
 }
 
 EFI_STATUS
-efi_main(EFI_HANDLE image, EFI_SYSTEM_TABLE *systab)
+fwupd_main(EFI_HANDLE image)
 {
 	EFI_STATUS rc;
 	UINTN i, n_updates = 0;
 	EFI_RESET_TYPE reset_type = EfiResetWarm;
 	_cleanup_free FWUP_UPDATE_TABLE **updates = NULL;
-
-	InitializeLib(image, systab);
-
-	fwup_debug_hook();
 
 	/* show the version to screen */
 	fwup_info(L"fwupd-efi version " PACKAGE_VERSION);
@@ -638,6 +634,19 @@ efi_main(EFI_HANDLE image, EFI_SYSTEM_TABLE *systab)
 	if (fwup_debug_get_enabled())
 		fwup_msleep(30 * SECONDS);
 	uefi_call_wrapper(RT->ResetSystem, 4, reset_type, EFI_SUCCESS, 0, NULL);
+	return rc;
+}
 
+EFI_STATUS
+efi_main(EFI_HANDLE image, EFI_SYSTEM_TABLE *systab)
+{
+	EFI_STATUS rc;
+
+	InitializeLib(image, systab);
+	update_stack_guard();
+
+	fwup_debug_hook();
+	rc = fwupd_main(image);
+	uefi_call_wrapper(BS->Exit, 4, image, rc, 0, NULL);
 	return rc;
 }
