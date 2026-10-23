@@ -1,11 +1,11 @@
 repos:
 -   repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.1.0
+    rev: v6.0.0
     hooks:
     -   id: no-commit-to-branch
         args: [--branch, main]
     -   id: check-added-large-files
-    -   id: check-byte-order-marker
+    -   id: fix-byte-order-marker
     -   id: check-executables-have-shebangs
     -   id: forbid-new-submodules
     -   id: check-yaml
@@ -21,12 +21,12 @@ repos:
     -   id: mixed-line-ending
         args: [--fix=lf]
 -   repo: https://github.com/codespell-project/codespell
-    rev: v2.1.0
+    rev: v2.4.3
     hooks:
     -   id: codespell
         args: ['--config', './contrib/codespell.cfg', --write-changes]
 -   repo: https://github.com/ambv/black
-    rev: 22.3.0
+    rev: 26.10.1
     hooks:
     - id: black
 -   repo: local
@@ -37,7 +37,7 @@ repos:
       entry: shellcheck --severity=error -e SC2068
       types: [shell]
 -   repo: https://github.com/igorshubovych/markdownlint-cli
-    rev: v0.31.1
+    rev: v0.49.1
     hooks:
     - id: markdownlint
       args: ['--fix', '--ignore', '.github']
