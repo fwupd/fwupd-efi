@@ -37,7 +37,7 @@ trust required by secure boot.
 * Build our data structure and add the capsules to it:
 
   * Read the capsule file from the ESP, loading it into a dynamically allocated buffer.
-  * If the capsule is a UX capsule (containing the pre-generated localised bitmap image of
+  * If the capsule is a UX capsule (containing the pre-generated localized bitmap image of
     “Installing firmware update…”) then additionally verify the checksum is valid.
   * On any error abort, returning to the EFI firmware.
 
