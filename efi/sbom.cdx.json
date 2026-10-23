@@ -6,7 +6,7 @@
   "metadata": {
     "authors": [
       {
-      "name": "@VCS_AUTHORS@"
+        "name": "@VCS_AUTHORS@"
       }
     ],
     "lifecycles": {
