@@ -129,6 +129,7 @@ mock_init(void)
 	memset(&mock_bs, 0, sizeof(mock_bs));
 	memset(&mock_rt, 0, sizeof(mock_rt));
 
+	mock_bs.Exit = mock_exit;
 	mock_bs.Stall = mock_stall;
 	mock_bs.AllocatePages = mock_allocate_pages;
 	mock_bs.FreePages = mock_free_pages;
@@ -656,6 +657,18 @@ test_cbd_terminator_position(void)
 	/* entries 0 and 1 are valid */
 	assert(cbd[0].Length == 100);
 	assert(cbd[1].Length == 200);
+}
+
+/* ================================================================
+ * Stack protector needs some things to be present for the self-test
+ * to link correctly.
+ * ================================================================ */
+
+uintptr_t __stack_chk_guard = (uintptr_t)test_cbd_terminator_position;
+
+uintptr_t stack_protector_init(void)
+{
+	return 0;
 }
 
 /* ================================================================

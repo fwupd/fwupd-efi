@@ -164,7 +164,8 @@ compile_args = ['-Og',
                 '-fshort-wchar',
                 '-ffreestanding',
                 '-fno-strict-aliasing',
-                '-fno-stack-protector',
+                '-fstack-protector-strong',
+                '-mstack-protector-guard=global',
                 '-fno-stack-check',
                 '-fno-merge-all-constants',
                 '-Wsign-compare',
@@ -255,6 +256,11 @@ o_files += custom_target('fwup-efi.o',
 o_files += custom_target('fwup-common.o',
                         input : 'fwup-common.c',
                         output : 'fwup-common.o',
+                        command : [cc.cmd_array(), '-c', '@INPUT@', '-o', '@OUTPUT@']
+                                  + compile_args)
+o_files += custom_target('stack-protector.o',
+                        input : 'stack-protector.c',
+                        output : 'stack-protector.o',
                         command : [cc.cmd_array(), '-c', '@INPUT@', '-o', '@OUTPUT@']
                                   + compile_args)
 

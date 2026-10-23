@@ -213,6 +213,10 @@ typedef struct {
 	UINT64	Signature;
 } EFI_TABLE_HEADER;
 
+typedef EFI_STATUS (*EFI_EXIT)(EFI_HANDLE image_handle,
+			       EFI_STATUS exit_status,
+			       UINTN exit_data_size,
+			       CHAR16 *exit_data);
 typedef EFI_STATUS (*EFI_STALL)(UINTN microseconds);
 typedef EFI_STATUS (*EFI_ALLOCATE_PAGES)(EFI_ALLOCATE_TYPE type,
 					 EFI_MEMORY_TYPE mem_type,
@@ -273,6 +277,7 @@ typedef struct {
 	VOID			*OpenProtocolInformation;
 	VOID			*ProtocolsPerHandle;
 	VOID			*LocateHandleBuffer2;
+	EFI_EXIT		Exit;
 	EFI_STALL		Stall;
 } EFI_BOOT_SERVICES;
 
