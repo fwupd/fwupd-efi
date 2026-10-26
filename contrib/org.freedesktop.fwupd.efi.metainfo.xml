@@ -27,6 +27,26 @@
   </developer>
   <content_rating type="oars-1.0"/>
   <releases>
+    <release version="1.9" date="2026-10-26">
+      <description>
+        <p>This release adds the following features:</p>
+        <ul>
+          <li>Add self-test harness with mock EFI headers</li>
+          <li>Add support for .pkgnote</li>
+          <li>Record the version of gnu-efi we built against</li>
+        </ul>
+        <p>This release fixes the following bugs:</p>
+        <ul>
+          <li>Fix block descriptor terminator index when capsules are skipped</li>
+          <li>Fix device path size limit in update info validation</li>
+          <li>Fix GetVariable call with NULL data size in variable deletion</li>
+          <li>Fix off-by-one in maximum capsule update count check</li>
+          <li>Fix out-of-bounds write via malicious capsule HeaderSize</li>
+          <li>Keep .dynstr and .dynsym when building the binary</li>
+          <li>Remove support for SHIM_DEBUG to fix BRLY-2026-062</li>
+        </ul>
+      </description>
+    </release>
     <release version="1.8" date="2025-10-03">
       <description>
         <p>This release fixes the following bugs:</p>
