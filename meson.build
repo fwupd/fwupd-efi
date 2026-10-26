@@ -1,5 +1,5 @@
 project('fwupd-efi', 'c',
-  version : '1.9',
+  version : '1.10',
   license : 'LGPL-2.1+',
   meson_version : '>=0.58.2',
   default_options : ['warning_level=2', 'c_std=c99'],
