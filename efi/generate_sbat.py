@@ -57,7 +57,7 @@ def _generate_sbat(args):
             "{0}.{1},{2},{3},{4},{5},{6}\n".format(
                 args.project_name,
                 args.sbat_distro_id,
-                args.sbat_distro_generation or args.sbat_generation,
+                args.sbat_distro_generation,
                 args.sbat_distro_summary or FWUPD_SUMMARY,
                 args.sbat_distro_pkgname,
                 args.sbat_distro_version or args.project_version,
@@ -99,7 +99,7 @@ if __name__ == "__main__":
     parser.add_argument("--sbat-distro-id", default=None, help="SBAT distribution ID")
     parser.add_argument(
         "--sbat-distro-generation",
-        default=None,
+        default=1,
         type=int,
         help="SBAT distribution generation",
     )

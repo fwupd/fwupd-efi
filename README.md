@@ -74,3 +74,16 @@ Typically, this will be set as part of the packager build script, e.g.
     -Defi_sbat_distro_version="%{version}" \
     -Defi_sbat_distro_url="https://src.fedoraproject.org/rpms/%{name}" \
 ```
+
+The generation number of the distribution-specific SBAT entry defaults to 1 and
+is independent of the `fwupd-efi` generation. It is only incremented when a
+distribution-specific security fix requires revoking older builds of that
+distribution, and like the global generation it must never be decreased or
+reset, even when the `fwupd-efi` generation is bumped, e.g.
+
+```meson
+    -Defi_sbat_distro_generation=2 \
+```
+
+Distributions that have already shipped signed binaries with a distribution
+generation higher than 1 must set this option to keep the number monotonic.
