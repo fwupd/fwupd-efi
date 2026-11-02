@@ -165,7 +165,6 @@ compile_args = ['-Og',
                 '-ffreestanding',
                 '-fno-strict-aliasing',
                 '-fstack-protector-strong',
-                '-mstack-protector-guard=global',
                 '-fno-stack-check',
                 '-fno-merge-all-constants',
                 '-Wsign-compare',
@@ -178,6 +177,8 @@ compile_args = ['-Og',
                 '-isystem', join_paths(efi_incdir, gnu_efi_path_arch)]
 # clang only has fno-merge-all-constants
 compile_args += cc.first_supported_argument('-fno-merge-constants')
+# not supported on all architectures, e.g. loongarch64
+compile_args += cc.get_supported_arguments('-mstack-protector-guard=global')
 if get_option('werror')
     compile_args += '-Werror'
 endif
