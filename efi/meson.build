@@ -1,4 +1,5 @@
 generate_sbat = [python3, files('generate_sbat.py')]
+generate_pkgnote = [python3, files('generate_pkgnote.py')]
 generate_binary = [python3, files('generate_binary.py')]
 
 # get source version, falling back
@@ -107,9 +108,9 @@ if get_option('efi_sbat_distro_id') != ''
   endif
 endif
 
-# SBOM is never in system lds
-if uswid.found()
-  warning('Switching to local copy of linker script as using SBOM')
+# SBOM and pkgnote are never in system lds
+if uswid.found() or get_option('pkgnote') != ''
+  warning('Switching to local copy of linker script as using SBOM or pkgnote')
   efi_ldsdir = join_paths(meson.current_source_dir(), 'lds')
   arch_lds = 'elf_@0@@1@_efi.lds'.format(gnu_efi_arch, lds_os)
 endif
@@ -128,10 +129,10 @@ if objcopy_manualsymbols
   endif
 endif
 
-# SBOM not in system crt0
+# SBOM and pkgnote not in system crt0
 if objcopy_manualsymbols
-  if uswid.found()
-    warning('Switching to local copy of crt0 as using SBOM')
+  if uswid.found() or get_option('pkgnote') != ''
+    warning('Switching to local copy of crt0 as using SBOM or pkgnote')
     efi_crtdir = join_paths(meson.current_build_dir(), 'crt0')
     efi_ldsdir = join_paths(meson.current_source_dir(), 'lds')
   endif
@@ -285,6 +286,17 @@ o_files += custom_target('fwup-sbat.o',
                           '--sbat-distro-url', get_option('efi_sbat_distro_url'),
                         ])
 
+o_files += custom_target('fwup-pkgnote.o',
+                        output : 'fwup-pkgnote.o',
+                        command : [
+                          generate_pkgnote,
+                          '@OUTPUT@',
+                          '--cc', ' '.join(cc.cmd_array()),
+                          '--cflags', ' '.join(compile_args),
+                          '--objcopy', objcopy,
+                          '--pkgnote', get_option('pkgnote'),
+                        ])
+
 if uswid.found()
   if uswid.version().version_compare('>=0.4.3')
     uswid_cflags = ['--cflags', ' '.join(compile_args)]
@@ -326,7 +338,6 @@ app = custom_target(efi_name,
                       '--arch', gnu_efi_arch,
                       '--os', host_machine.system(),
                       '--objcopy', objcopy,
-                      '--pkgnote', get_option('pkgnote'),
                       '--genpeimg', genpeimg.found() ? genpeimg : ''
                     ]
                     + generate_binary_extra,

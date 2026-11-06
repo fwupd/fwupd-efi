@@ -15,6 +15,10 @@ if uswid.found()
   crt0_compile_args += ['-DUSING_SBOM']
   nr_sections = nr_sections + 1
 endif
+if get_option('pkgnote') != ''
+  crt0_compile_args += ['-DUSING_PKGNOTE']
+  nr_sections = nr_sections + 1
+endif
 crt0_compile_args += ['-DNR_SECTIONS=@0@'.format(nr_sections)]
 
 

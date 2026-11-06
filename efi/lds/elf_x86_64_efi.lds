@@ -121,6 +121,8 @@ SECTIONS
   . = ALIGN(4096);
   .sbom : { *(.sbom) }
   . = ALIGN(4096);
+  .pkgnote : { *(.pkgnote) }
+  . = ALIGN(4096);
   .dynsym   : { *(.dynsym) }
   . = ALIGN(4096);
   .dynstr   : { *(.dynstr) }

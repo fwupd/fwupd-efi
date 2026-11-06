@@ -172,6 +172,19 @@ section_table:
 	.2byte	0		// NumberOfLineNumbers  (0 for executables)
 	.4byte	0x40000040	// Characteristics (section flags)
 #endif
+#ifdef USING_PKGNOTE
+	.ascii	".pkgnote"
+	.4byte	_pkgnote_vsize - ImageBase		// VirtualSize
+	.4byte	_pkgnote - ImageBase	// VirtualAddress
+	.4byte	_pkgnote_size - ImageBase		// SizeOfRawData
+	.4byte	_pkgnote - ImageBase	// PointerToRawData
+
+	.4byte	0		// PointerToRelocations (0 for executables)
+	.4byte	0		// PointerToLineNumbers (0 for executables)
+	.2byte	0		// NumberOfRelocations  (0 for executables)
+	.2byte	0		// NumberOfLineNumbers  (0 for executables)
+	.4byte	0x40000040	// Characteristics (section flags)
+#endif
 
 .balign 256
 .globl	_start

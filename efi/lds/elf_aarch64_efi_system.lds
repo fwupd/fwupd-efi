@@ -136,6 +136,8 @@ SECTIONS
     _epsbom = .;
   }
   _sbom_size = _epsbom - _sbom;
+  . = ALIGN(4096);
+  .pkgnote : { *(.pkgnote) }
   _image_end = .;
   _alldata_size = _image_end - _reloc;
 
